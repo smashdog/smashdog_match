@@ -1,0 +1,98 @@
+{
+    "build": {
+        "beforeDevCommand": "npm run dev",
+        "beforeBuildCommand": "npm run build",
+        "devPath": "http://localhost:19999",
+        "distDir": "../dist",
+        "withGlobalTauri": true
+    },
+    "package": {
+        "productName": "心情过客的比赛管理器",
+        "version": "0.4.0"
+    },
+    "tauri": {
+        "updater": {
+            "active": true,
+            "dialog": true,
+            "pubkey": "",
+            "windows": {
+                "installMode": "basicUi",
+                "installerArgs": []
+            },
+            "endpoints": [
+                ""
+            ]
+        },
+        "allowlist": {
+            "all": true,
+            "shell": {
+                "all": true,
+                "open": "^.*?",
+                "sidecar": true,
+                "execute": true,
+                "scope": [
+                    {
+                        "name": "explorer",
+                        "cmd": "explorer.exe",
+                        "args": true
+                    }
+                ]
+            },
+            "fs": {
+                "all": true,
+                "writeFile": true,
+                "scope": [
+                    "$APP/*",
+                    "$APP/obs/*",
+                    "$APP/database/*"
+                ]
+            },
+            "path": {
+                "all": true
+            },
+            "clipboard": {
+                "all": true,
+                "writeText": true,
+                "readText": true
+            }
+        },
+        "windows": [
+            {
+                "title": "心情过客的比赛管理器",
+                "width": 1080,
+                "height": 768
+            }
+        ],
+        "security": {
+            "csp": null
+        },
+        "bundle": {
+            "active": true,
+            "targets": "all",
+            "identifier": "com.smashdogMatch.app",
+            "icon": [
+                "icons/32x32.png",
+                "icons/128x128.png",
+                "icons/128x128@2x.png",
+                "icons/icon.icns",
+                "icons/icon.ico"
+            ],
+            "windows": {
+                "allowDowngrades": true,
+                "certificateThumbprint": null,
+                "digestAlgorithm": null,
+                "nsis": null,
+                "timestampUrl": null,
+                "tsp": false,
+                "webviewFixedRuntimePath": null,
+                "webviewInstallMode": {
+                    "silent": true,
+                    "type": "downloadBootstrapper"
+                },
+                "wix": {
+                    "language": "zh-CN"
+                }
+            }
+        }
+    }
+}

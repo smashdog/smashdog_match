@@ -1,0 +1,12 @@
+{
+  "0.4.0": [
+    {
+      "prepare": "select * from sqlite_master where type = 'table' and name = 'games' and sql like '%group_count%'",
+      "update": "alter table games add column 'group_count' INTEGER default 1"
+    },
+    {
+      "prepare": "select * from sqlite_master where type = 'table' and name = 'players' and sql like '%is_display%'",
+      "update": "alter table players add column 'is_display' INTEGER default 1; CREATE INDEX is_display_IDX ON players (is_display);"
+    }
+  ]
+}
