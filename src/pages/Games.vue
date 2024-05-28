@@ -328,6 +328,7 @@ export default {
         localStorage.setItem(`signMatch${game.id}`, 1)
         this.list.data[k].sign = true
       }
+      layer.msg(res.msg)
     },
     async copySignUrl(id){
       let url = this.config.shareApi.url.match(/(https?:\/\/[^/]+)\//i)

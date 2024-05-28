@@ -101,7 +101,6 @@ let match = await exists('obs/match.txt', {dir: BaseDirectory.App})
 if(!match){
   await writeTextFile('obs/match.txt', '', { dir: BaseDirectory.App })
 }
-
 if(import.meta.env.VITE_DEBUG){
   app.config.globalProperties.$debug = true
 }else{

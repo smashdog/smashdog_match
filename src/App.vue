@@ -9,7 +9,7 @@ export default {
     // this.$router.push(`/games`)
   },
   mounted() {
-    if (!import.meta.env.VITE_DEBUG) {
+    if (!this.$debug) {
       document.addEventListener('contextmenu', function (event) {
         event.preventDefault()
       })
