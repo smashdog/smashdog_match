@@ -214,6 +214,7 @@ app.config.globalProperties.$getGame = async (id) => {
 }
 
 app.config.globalProperties.$tfetch = async (url = "", data = {}) => {
+  const index = layer.load()
   let formdata = new FormData()
   for(let key in data){
     formdata.append(key, data[key])
@@ -225,8 +226,10 @@ app.config.globalProperties.$tfetch = async (url = "", data = {}) => {
       timeout: 5,
       body: body
     })
+    layer.close(index)
     return res.data
   } catch (error) {
+    layer.close(index)
     return {code: -1, msg: '网络错误'}
   }
 }

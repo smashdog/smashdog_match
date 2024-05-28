@@ -1,6 +1,6 @@
 [package]
 name = "match"
-version = "0.5.1"
+version = "0.5.2"
 description = "心情过客的比赛管理器"
 authors = ["心情过客"]
 edition = "2021"
