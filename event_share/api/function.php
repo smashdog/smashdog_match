@@ -23,13 +23,13 @@ createdb();
 function logs($msg)
 {
     $date = date('Y-m-d');
-    if (!is_dir('../data/logs')) {
-        mkdir('../data/logs');
+    if (!is_dir(__DIR__ . '/../data/logs')) {
+        mkdir(__DIR__ . '/../data/logs');
     }
-    if (!is_dir('../data/logs/' . $date)) {
-        mkdir('../data/logs/' . $date);
+    if (!is_dir(__DIR__ . '/../data/logs/' . $date)) {
+        mkdir(__DIR__ . '/../data/logs/' . $date);
     }
-    $fp = fopen('../data/logs/' . $date . '/' . date('H') . '.log', 'a+');
+    $fp = fopen(__DIR__ . '/../data/logs/' . $date . '/' . date('H') . '.log', 'a+');
     fwrite($fp, '[' . date('Y-m-d H:i:s') . '] ' . $msg . "\n");
     fclose($fp);
 }
