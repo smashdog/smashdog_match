@@ -2,6 +2,7 @@
   <h3>{{ game.title }}</h3>
   <div class="top">
     <div class="btn-group" role="group">
+      <button type="button" class="btn btn-sm btn-primary" @click="sync()" v-if="config.shareApi.url.length > 0 && config.shareApi.key.length > 0">同步报名数据</button>
       <button type="button" class="btn btn-sm btn-success" @click="showAdd = true" v-if="(game.game_status == 0 || (game.game_status == 4 && game.game_format == 3)) && this.list.count < (game.group_nums * game.group_count)">添加选手</button>
       <button type="button" class="btn btn-sm btn-primary" @click="randPlayers()" v-if="game.game_status == 0 && game.game_format != 3">打乱选手</button>
       <button type="button" class="btn btn-sm btn-secondary" @click="$router.push('/games')">返回比赛列表</button>
@@ -60,6 +61,12 @@ export default {
   components: {mypage},
   data() {
     return {
+      config: {
+        shareApi: {
+          url: '',
+          key: '',
+        }
+      },
       list:{
         data: [],
         page: 1,
@@ -86,6 +93,18 @@ export default {
     }
   },
   async mounted() {
+    let config = {}
+    if(!localStorage.getItem('config')){
+      config = {
+        shareApi: {
+          url: '',
+          key: ''
+        }
+      }
+    }else{
+      config = JSON.parse(localStorage.getItem('config'))
+    }
+    this.config = config
     this.game_id = this.$route.params.id
     const game = await this.$getGame(this.game_id)
     if(typeof game == 'string'){
@@ -97,6 +116,62 @@ export default {
     this.getList()
   },
   methods: {
+    async sync(){
+      const res = await this.$tfetch(this.config.shareApi.url.replace('index.php', 'sign.php'), {
+        key: this.config.shareApi.key,
+        id: this.game.id,
+        action: 'sync'
+      })
+      if(res.code != 0){
+        layer.msg(res.msg)
+        return
+      }
+      let updates = [], inserts = [], temp1 = this.list.data
+      for(let k in res.data){
+        let update = false
+        for(let k1 in temp1){
+          if(temp1[k1].title == res.data[k].nickname){
+            update = true
+            updates.push({
+              id: temp1[k1].id,
+              title: res.data[k].nickname,
+              fast_copy: res.data[k].fastcopy
+            })
+            temp1.splice(k1, 1)
+            break
+          }
+        }
+        if(!update){
+          inserts.push({
+            title: res.data[k].nickname,
+            fast_copy: res.data[k].fastcopy
+          })
+        }
+      }
+      let dels = []
+      for(let k in temp1){
+        dels.push(temp1[k].id)
+      }
+      if(dels.length > 0){
+        await this.$db.execute("delete from players where id in (" + dels.join(',') + ")")
+      }
+      if(updates.length > 0){
+        let sql = ''
+        for(let k in updates){
+          sql += `update players set title = '${updates[k]['title']}', fast_copy = '${updates[k]['fast_copy']}' where id = ${updates[k]['id']};`
+        }
+        await this.$db.execute(sql)
+      }
+      if(inserts.length > 0){
+        let sql = 'insert into players (title, fast_copy, game_id, sort_num) values ', i = 0
+        for(let k in inserts){
+          sql += (i == 0 ? '' : ',') + `('${inserts[k]['title']}', '${inserts[k]['fast_copy']}', ${this.game.id}, 0)`
+          i ++
+        }
+        await this.$db.execute(sql)
+      }
+      this.getList()
+    },
     async fastCopy(text) {
       if (text.length == 0) {
         return

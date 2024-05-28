@@ -13,6 +13,7 @@ import { type } from "@tauri-apps/api/os"
 import Vue3Dragscroll from 'vue3-dragscroll'
 import tooltip from "./components/tooltip/directive"
 import { BaseDirectory, writeTextFile, exists, createDir, writeBinaryFile } from '@tauri-apps/api/fs'
+import { fetch as tfetch, Body, getClient } from "@tauri-apps/api/http"
 
 const app = createApp(App)
 
@@ -212,16 +213,35 @@ app.config.globalProperties.$getGame = async (id) => {
   }
 }
 
+app.config.globalProperties.$tfetch = async (url = "", data = {}) => {
+  let formdata = new FormData()
+  for(let key in data){
+    formdata.append(key, data[key])
+  }
+  const body = Body.form(formdata)
+  try {
+    let res = await tfetch(url, {
+      method: "POST",
+      timeout: 5,
+      body: body
+    })
+    return res.data
+  } catch (error) {
+    return {code: -1, msg: '网络错误'}
+  }
+}
+
 app.config.globalProperties.$postData = async (url = "", data = {}) => {
   let formdata = new FormData()
   for(let key in data){
+    console.log(data[key])
     formdata.append(key, data[key])
   }
   let controller = new AbortController()
   controller.signal.addEventListener('abort', () => layer.msg('请求超时'))
   let t = setTimeout(() => {
     controller.abort()
-  }, 3000)
+  }, 5000)
   const response = await fetch(url, {
     method: "POST",
     cache: "no-cache",
@@ -229,6 +249,12 @@ app.config.globalProperties.$postData = async (url = "", data = {}) => {
     body: formdata,
     signal: controller.signal,
   })
+  try {
+    console.log(response)
+    return await response.text()
+  } catch (error) {
+    console.error(error)
+  }
   clearTimeout(t)
   try {
   } catch (error) {

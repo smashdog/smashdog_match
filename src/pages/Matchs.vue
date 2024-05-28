@@ -301,7 +301,7 @@ export default {
       this.group_count = []
       this.winner_matchs = []
       this.loser_matchs = []
-      this.getAllMatchs()
+      this.getAllMatchs(true)
     },
     winnerClick(v){
       if(v == 0){
@@ -461,9 +461,9 @@ export default {
       if (this[chars][i][j][k].id == this.start_id) {
         let filename = ''
         if (p == 'player_one_score') {
-          filename = 'obs/p1_score.txt'
+          filename = `obs/p${this[chars][i][j][k].change_user_place == 1 ? 2 : 1}_score.txt`
         } else {
-          filename = 'obs/p2_score.txt'
+          filename = `obs/p${this[chars][i][j][k].change_user_place == 1 ? 1 : 2}_score.txt`
         }
         await writeTextFile(filename, this[chars][i][j][k][p] + '', { dir: BaseDirectory.App })
       }
@@ -742,6 +742,11 @@ export default {
     },
     async endMatch(){
       layer.confirm('结束比赛将不能再更改比赛信息，确定结束比赛吗？', async index => {
+        try {
+          localStorage.removeItem(`signMatch${this.game.id}`)
+        } catch (error) {
+          
+        }
         await writeTextFile('obs/game_name.txt', '', { dir: BaseDirectory.App })
         await writeTextFile('obs/match.txt', '', { dir: BaseDirectory.App })
         await writeTextFile('obs/p1_title.txt', '', { dir: BaseDirectory.App })

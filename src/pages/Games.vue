@@ -130,6 +130,8 @@
           <td>
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-primary btn-sm" @click="viewplayers(item.id)">查看参赛选手</button>
+              <button type="button" class="btn btn-primary btn-sm" @click="startSign(item, index)" v-if="!item.sign && config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && item.game_status == 0">开始报名</button>
+              <button type="button" class="btn btn-primary btn-sm" @click="copySignUrl(item.id)" v-if="item.sign">复制报名链接</button>
               <button type="button" class="btn btn-primary btn-sm" v-if="item.game_status > 0"
                 @click="viewmatchs(item)">查看对局</button>
               <button type="button" class="btn btn-success btn-sm" v-if="item.game_status == 0"
@@ -149,6 +151,7 @@
   <mypage :page="list.page" :maxPage="list.maxPage" :count="list.count" @getList="getList"></MyPage>
 </template>
 <script>
+import { writeText } from '@tauri-apps/api/clipboard'
 import mypage from "../components/page.vue"
 import { open } from "@tauri-apps/api/shell"
 import { appDataDir } from "@tauri-apps/api/path"
@@ -247,6 +250,11 @@ export default {
         const temp1 = await this.$db.select('select count(*) as mycount from players where game_id = ? and is_display = 1', [temp.data[i].id])
         let temp2 = temp.data[i]
         temp2.count = temp1[0].mycount
+        if(localStorage.getItem(`signMatch${temp.data[i].id}`)){
+          temp2['sign'] = true
+        }else{
+          temp2['sign'] = false
+        }
         this.list.data.push(temp2)
       }
     },
@@ -302,6 +310,29 @@ export default {
     },
     viewplayers(id) {
       this.$router.push('/players/' + id)
+    },
+    async startSign(game, k){
+      const config = JSON.parse(localStorage.getItem('config'))
+      let res = await this.$tfetch(config.shareApi.url.replace('index.php', 'sign.php'), {
+        game: JSON.stringify(game),
+        group_count: `${game.group_count}`,
+        winner_matchs: '[]',
+        loser_matchs: '[]',
+        id: game.id,
+        winner_idx: 0,
+        looser_idx: 0,
+        key: config.shareApi.key,
+        action: 'create_sign'
+      })
+      if(res.code == 0){
+        localStorage.setItem(`signMatch${game.id}`, 1)
+        this.list.data[k].sign = true
+      }
+    },
+    async copySignUrl(id){
+      let url = this.config.shareApi.url.match(/(https?:\/\/[^/]+)\//i)
+      await writeText(`${url[0]}#/sign?key=${this.config.shareApi.key}&id=${id}`)
+      layer.msg('已把报名链接复制到剪贴板，请粘贴到想要分享的地方吧！')
     },
     async editGames(id) {
       const sqlreturn = await this.$db.select("select * from games where id = ?", [id])
@@ -442,7 +473,8 @@ export default {
         }else{
           for(let i = 0; i < game[0].group_count; i++){
             players_dist[i] = []
-            players_dist[i] = players.slice(i * game[0].group_nums, game[0].group_nums)
+            players_dist[i] = players.slice(0, game[0].group_nums)
+            players.splice(0, game[0].group_nums)
           }
         }
 

@@ -1,0 +1,34 @@
+<template>
+  <div class="home">
+    <p>
+      <img src="../assets/header.png" alt="">
+    </p>
+    <h3>心情过客的比赛管理器<a href="https://pan.baidu.com/s/1qWAfHyFZAd1zQ_bEUvZ1yw?pwd=j8je" class="btn btn-primary" target="_blank">下载</a></h3>
+    <p v-if="!is_login">
+      <button class="btn btn-primary" @click="$router.push('/register')">注册</button>
+      <button class="btn btn-success" @click="$router.push('/login')">登录</button>
+    </p>
+    <p>
+      <button class="btn btn-success" @click="$router.push('/sign')" v-if="save.id && save.key">立即报名</button>
+      <button class="btn btn-primary" @click="logout()" v-if="is_login">退出登录</button>
+    </p>
+  </div>
+</template>
+
+<script setup>
+import { onMounted, ref } from 'vue'
+const is_login = ref(false)
+const save = ref({})
+const logout = () => {
+  localStorage.removeItem('token')
+  is_login.value = false
+}
+onMounted(async () => {
+  is_login.value = localStorage.getItem('token') ? true : false
+  save.value = localStorage.getItem('save') ? JSON.parse(localStorage.getItem('save')) : {}
+})
+</script>
+
+<style scoped lang="less">
+@import url('../assets/home.less');
+</style>
