@@ -42,7 +42,7 @@ while(true){
             Db::table('email')->delete($r['id']);
             // 重置自增
             $r = Db::table('email')->count();
-            if($r['mycount'] == 0){
+            if($r == 0){
                 Db::table('sqlite_sequence')->where('name', 'email')->update([
                     'seq' => 0
                 ]);
