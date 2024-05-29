@@ -33,6 +33,14 @@ const routes = [
     path: '/sign',
     component: () => import(/* webpackChunkName: "Sign-trunk" */ './pages/Sign.vue')
   },
+  {
+    path: '/findpwd',
+    component: () => import(/* webpackChunkName: "FindPwd-trunk" */ './pages/FindPwd.vue')
+  },
+  {
+    path: '/changepwd',
+    component: () => import(/* webpackChunkName: "User-trunk" */ './pages/ChangePwd.vue')
+  },
 ]
 
 // 创建路由对象

@@ -43,13 +43,27 @@ while(true){
             // 重置自增
             $r = Db::table('email')->count();
             if($r == 0){
-                Db::table('sqlite_sequence')->where('name', 'email')->update([
-                    'seq' => 0
-                ]);
+                $r = Db::table('sqlite_sequence')->where('name', 'email')->value('seq');
+                if($r > 0){
+                    Db::table('sqlite_sequence')->where('name', 'email')->update([
+                        'seq' => 0
+                    ]);
+                }
             }
         }
     } catch (Exception $e) {
         logs($e->getMessage());
+    }
+    // 删除过期的验证码
+    Db::table('findpwd')->where('create_time < '.(time() - 15*60))->delete();
+    $r = Db::table('findpwd')->count();
+    if($r == 0){
+        $r = Db::table('sqlite_sequence')->where('name', 'findpwd')->value('seq');
+        if($r > 0){
+            Db::table('sqlite_sequence')->where('name', 'findpwd')->update([
+                'seq' => 0
+            ]);
+        }
     }
     echo '.';
     sleep(1);

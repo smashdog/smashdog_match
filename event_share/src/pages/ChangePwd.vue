@@ -1,10 +1,15 @@
 <template>
   <form class="div_form">
-    <h4>注册</h4>
+    <h4>修改密码</h4>
     <div class="mb-3">
       <label for="email" class="form-label">邮箱</label>
       <input type="email" class="form-control" id="email" name="email" placeholder="请尽量使用国内邮箱，国外邮箱有可能收不到邮件" required
         v-model="form.email" autocomplete="off">
+    </div>
+    <div class="mb-3">
+      <label for="code" class="form-label">邮箱验证码</label>
+      <input type="text" class="form-control" id="code" name="code" placeholder="请输入邮箱验证码" required
+        v-model="form.code" autocomplete="off" maxlength="6">
     </div>
     <div class="mb-3">
       <label for="password" class="form-label">密码</label>
@@ -21,49 +26,34 @@
       <button type="button" class="btn btn-secondary btn-sm" @click="$router.push(`/`)">取消</button>
     </div>
   </form>
-  <Verify
-      mode="pop"
-      :captchaType="captchaType"
-      :imgSize="{width:'400px',height:'200px'}"
-      ref="verify"
-      @success="handleSuccess"
-    ></Verify>
+  <Verify mode="pop" :captchaType="captchaType" :imgSize="{ width: '400px', height: '200px' }" ref="verify"
+    @success="handleSuccess"></Verify>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import Verify from '../components/verifition/Verify.vue'
-import { useRouter } from 'vue-router'
 import { myFetch } from '../tools/net.js'
-const form = {
+const router = useRouter()
+const route = useRoute()
+const form = ref({
   email: '',
   password: '',
   repassword: '',
-}
+  code: '',
+})
 const verify = ref(null)
 const captchaType = ref('')
-const router = useRouter()
-const handleSuccess = (res)=>{
-  if(res){
+const handleSuccess = (res) => {
+  if (res) {
     localStorage.setItem('captchaVerification', res.captchaVerification ?? '')
     submit()
   }
 }
 const submit = async () => {
-  if(!form.email || !form.password || !form.repassword){
-    layer.msg('请填写完整的表单')
-    return
-  }
-  if(!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.email)){
+  if (!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.value.email)) {
     layer.msg('邮箱格式不正确')
-    return
-  }
-  if(form.password != form.repassword){
-    layer.msg('两次密码不一致')
-    return
-  }
-  if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/.test(form.password)){
-    layer.msg('密码必须包含大小写字母、数字和特殊字符，长度至少为8位')
     return
   }
   if(!localStorage.getItem('captchaVerification')){
@@ -71,21 +61,27 @@ const submit = async () => {
     verify.value.show()
     return
   }
-  let res = await myFetch('/api/user.php', {
+  const res = await myFetch('/api/user.php', {
     captchaVerification: localStorage.getItem('captchaVerification'),
-    email: form.email,
-    password: form.password,
-    action: 'register',
+    email: form.value.email,
+    password: form.value.password,
+    repassword: form.value.repassword,
+    code: form.value.code,
+    action: 'change_pwd',
   })
   localStorage.removeItem('captchaVerification')
-  if(res.code == 0){
-    await router.push('/register_success')
-    return
-  }
   layer.msg(res.msg)
+  if (res.code == 0) {
+    router.push('/login')
+  }
 }
+onMounted(() => {
+  if(route.query.email){
+    form.value.email = route.query.email
+  }
+})
 </script>
 
-<style scoped lang="less">
+<style lang="less" scoped>
 @import url('../assets/form.less');
 </style>

@@ -148,6 +148,93 @@ switch ($_POST['action'] ?? '') {
             json_return(22, "token验证失败");
         }
         break;
+    case 'find_pwd':
+        // 二次验证码验证
+        if(!validate($config)){
+            json_return(21, "人机验证失败");
+            break;
+        }
+        $email = $_POST['email'] ?? '';
+        // 验证email
+        if (!preg_match('/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/', $email)) {
+            json_return(16, "邮箱格式错误");
+            break;
+        }
+        $r = Db::table('users')->where('email', $email)->find();
+        if(!$r){
+            json_return(23, "邮箱不存在");
+            break;
+        }
+        if($r['last_email_time'] > (time() - 60)){
+            json_return(24, "请勿频繁发送邮件");
+            break;
+        }
+        if(Db::table('findpwd')->where('email', $email)->find()){
+            json_return(25, "请勿频繁发送邮件");
+            break;
+        }
+        $code = mt_rand(100000, 999999);
+        Db::table('email')->insert([
+            'mailto' => $email,
+            'content' => "<p>您于" . date('Y-m-d H:i:s') . "找回心情过客的比赛管理器密码</p>
+            <p>验证码：{$code}</p>
+            <p>此验证码有效时间为15分钟，请于15分钟内使用。</p>"
+        ]);
+        Db::table('findpwd')->insert([
+            'email' => $email,
+            'code' => $code,
+            'create_time' => time()
+        ]);
+        Db::table('users')->where('id', $r['id'])->update([
+            'last_email_time' => time()
+        ]);
+        json_return(0, '邮件发送成功');
+        break;
+    case 'change_pwd':
+        // 二次验证码验证
+        if(!validate($config)){
+            json_return(21, "人机验证失败");
+            break;
+        }
+        $code = $_POST['code'] ?? '';
+        if(!preg_match('/^\d{6}$/', $code)){
+            json_return(26, "验证码错误");
+            break;
+        }
+        $email = $_POST['email'] ?? '';
+        if (!preg_match('/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/', $email)) {
+            json_return(16, "邮箱格式错误");
+            break;
+        }
+        $r = Db::table('findpwd')->where('email', $email)->find();
+        if(!$r){
+            json_return(27, "参数错误");
+            break;
+        }
+        if($r['code'] != $code){
+            json_return(28, "验证码错误");
+            break;
+        }
+        $password = $_POST['password'] ?? '';
+        $repassword = $_POST['repassword'] ?? '';
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $password)) {
+            json_return(17, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
+            break;
+        }
+        if ($password !== $repassword) {
+            json_return(29, "两次密码不一致");
+            break;
+        }
+        if(!$r = Db::table('users')->where('email', $email)->find()){
+            json_return(30, "用户不存在");
+            break;
+        }
+        Db::table('users')->where('email', $email)->update([
+            'password' => md5(file_get_contents('../data/keys') . $_POST['password'])
+        ]);
+        Db::table('findpwd')->where('email', $email)->delete();
+        json_return(0, '密码修改成功');
+        break;
     default:
         json_return(-1, '参数错误！');
 }

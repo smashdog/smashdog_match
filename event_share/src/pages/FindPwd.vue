@@ -1,22 +1,14 @@
 <template>
   <form class="div_form">
-    <h4>登录</h4>
+    <h4>找回密码</h4>
     <div class="mb-3">
       <label for="email" class="form-label">邮箱</label>
-      <input type="email" class="form-control" id="email" name="email" placeholder="请输入你的邮箱" required
+      <input type="email" class="form-control" id="email" name="email" placeholder="请输入你要找回密码的邮箱" required
         v-model="form.email" autocomplete="off">
-    </div>
-    <div class="mb-3">
-      <label for="password" class="form-label">密码</label>
-      <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required
-        v-model="form.password" autocomplete="off">
     </div>
     <div class="mb-3">
       <button type="button" class="btn btn-success btn-sm" @click="submit()">提交</button>
       <button type="button" class="btn btn-secondary btn-sm" @click="$router.push(`/`)">取消</button>
-    </div>
-    <div class="mb-3">
-      <button type="button" class="btn btn-primary btn-sm" @click="$router.push('/findpwd')">找回密码</button>
     </div>
   </form>
   <Verify
@@ -33,11 +25,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Verify from '../components/verifition/Verify.vue'
 import { myFetch } from '../tools/net.js'
-const form = {
-  email: '',
-  password: '',
-}
 const router = useRouter()
+const form = ref({
+  email: ''
+})
 const verify = ref(null)
 const captchaType = ref('')
 const handleSuccess = (res)=>{
@@ -46,17 +37,9 @@ const handleSuccess = (res)=>{
     submit()
   }
 }
-const submit = async () => {
-  if(!form.email || !form.password){
-    layer.msg('请填写完整的表单')
-    return
-  }
-  if(!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.email)){
+const submit = async ()=>{
+  if(!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.value.email)){
     layer.msg('邮箱格式不正确')
-    return
-  }
-  if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/.test(form.password)){
-    layer.msg('密码必须包含大小写字母、数字和特殊字符，长度至少为8位')
     return
   }
   if(!localStorage.getItem('captchaVerification')){
@@ -64,22 +47,19 @@ const submit = async () => {
     verify.value.show()
     return
   }
-  let res = await myFetch('/api/user.php', {
+  const res = await myFetch('/api/user.php', {
     captchaVerification: localStorage.getItem('captchaVerification'),
-    email: form.email,
-    password: form.password,
-    action: 'login',
+    email: form.value.email,
+    action: 'find_pwd',
   })
   localStorage.removeItem('captchaVerification')
-  if(res.code == 0){
-    localStorage.setItem('token', res.data.token)
-    await router.push('/sign')
-    return
-  }
   layer.msg(res.msg)
+  if(res.code == 0){
+    router.push({path: '/changepwd', query: {email: form.value.email}})
+  }
 }
 </script>
 
-<style scoped lang="less">
+<style lang="less" scoped>
 @import url('../assets/form.less');
 </style>
