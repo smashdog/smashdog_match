@@ -41,6 +41,14 @@ const routes = [
     path: '/changepwd',
     component: () => import(/* webpackChunkName: "User-trunk" */ './pages/ChangePwd.vue')
   },
+  {
+    path: '/key_manager',
+    component: () => import(/* webpackChunkName: "KeyManager-trunk" */ './pages/KeyManager.vue')
+  },
+  {
+    path: '/game_list',
+    component: () => import(/* webpackChunkName: "GameList-trunk" */ './pages/GameList.vue')
+  },
 ]
 
 // 创建路由对象

@@ -22,5 +22,9 @@ switch ($_POST['action'] ?? '') {
             json_return(-1, "数据不存在");
             break;
         }
-        json_return(0, "success", json_decode(file_get_contents('../data/' . $_POST['key'] . '/' . $_POST['id'] . '/' . 'game.json'), true));
+        $r = json_decode(file_get_contents('../data/' . $_POST['key'] . '/' . $_POST['id'] . '/' . 'game.json'), true);
+        if(is_string($r['game'])){
+            $r['game'] = json_decode($r['game'], true);
+        }
+        json_return(0, "success", $r);
 }

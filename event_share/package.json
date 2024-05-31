@@ -15,6 +15,7 @@
     "layui": "^2.9.8",
     "rollup-plugin-copy": "^3.5.0",
     "vue": "^3.4.21",
+    "vue-clipboard3": "^2.0.0",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
