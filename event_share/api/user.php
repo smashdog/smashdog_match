@@ -142,7 +142,8 @@ switch ($_POST['action'] ?? '') {
         }
         if ($r = Db::table('users')->where('token', $_POST['token'])->value('email')) {
             json_return(0, 'token验证成功', [
-                'email' => $r
+                'email' => $r,
+                'admin' => $r == $config['manager'] ? true : false
             ]);
         } else {
             json_return(22, "token验证失败");

@@ -72,6 +72,8 @@ router.beforeEach(async (to, from, next) => {
     })
     if(res.code != 0){
       localStorage.removeItem('token')
+    }else if(res.data.admin){
+      localStorage.setItem('admin', res.data.admin)
     }
   }
   next()
