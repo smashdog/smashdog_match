@@ -2,8 +2,8 @@
   <h3>{{ game.title }}</h3>
   <div class="top">
     <div class="btn-group" role="group">
-      <button type="button" class="btn btn-sm btn-primary" @click="sync()" v-if="config.shareApi.url.length > 0 && config.shareApi.key.length > 0">同步报名数据</button>
-      <button type="button" class="btn btn-sm btn-success" @click="showAdd = true" v-if="(game.game_status == 0 || (game.game_status == 4 && game.game_format == 3)) && this.list.count < (game.group_nums * game.group_count)">添加选手</button>
+      <button type="button" class="btn btn-sm btn-primary" @click="sync()" v-if="config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && game.game_format != 3">同步报名数据</button>
+      <button type="button" class="btn btn-sm btn-success" @click="showAdd = true" v-if="(game.game_status == 0 && game.game_format != 3 && this.list.count < (game.group_nums * game.group_count)) || game.game_format == 3">添加选手</button>
       <button type="button" class="btn btn-sm btn-primary" @click="randPlayers()" v-if="game.game_status == 0 && game.game_format != 3">打乱选手</button>
       <button type="button" class="btn btn-sm btn-secondary" @click="$router.push('/games')">返回比赛列表</button>
     </div>
@@ -51,7 +51,7 @@
       </table>
     </div>
   </div>
-  <mypage :page="list.page" :maxPage="list.maxPage" :count="list.count" @getList="getList"></MyPage>
+  <mypage :page="list.page" :maxPage="list.maxPage" :count="list.count" @getList="getList"></mypage>
 </template>
 
 <script>
@@ -201,7 +201,7 @@ export default {
         layer.msg('请输入选手名称')
         return
       }
-      if(this.game.game_status == 1){
+      if(this.game.game_status == 1 && this.game.game_format != 3){
         layer.msg('比赛已经开始不能添加选手')
         return
       }

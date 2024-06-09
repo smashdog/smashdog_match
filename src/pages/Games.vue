@@ -15,12 +15,12 @@
         <input type="text" class="form-control" id="game_title" name="game_title" placeholder="请输入比赛名称"
           v-model="form.game_title" autocomplete="off">
       </div>
-      <div class="mb-3">
+      <div class="mb-3" v-show="form.game_format != 3">
         <label for="group_nums" class="form-label">每小组人数</label>
         <input type="number" class="form-control" id="group_nums" name="group_nums" placeholder="请输入小组人数"
           v-model="form.group_nums" value="2" step="1" min="2" autocomplete="off" max="256">
       </div>
-      <div class="mb-3">
+      <div class="mb-3" v-show="form.game_format != 3">
         <label for="group_count" class="form-label">多少个小组</label>
         <input type="number" class="form-control" id="group_count" name="group_count" placeholder="多少个小组"
           v-model="form.group_count" value="1" step="1" min="1" autocomplete="off" max="128">
@@ -42,13 +42,13 @@
               单败
             </label>
           </div>
-          <!-- <div class="form-check">
+          <div class="form-check">
             <input class="form-check-input" type="radio" name="game_format" id="game_format3" value="3"
               v-model="form.game_format">
             <label class="form-check-label" for="game_format3">
               赞助赛
             </label>
-          </div> -->
+          </div>
         </div>
       </div>
       <div class="mb-3">
@@ -122,19 +122,19 @@
         <tr v-for="(item, index) in list.data" :key="index">
           <td>{{ item.title }}</td>
           <td>{{ game_format[item.game_format] }}</td>
-          <td>{{ item.group_nums }}</td>
-          <td>{{ item.group_count }}</td>
+          <td>{{ item.game_format != 3 ? item.group_nums : '' }}</td>
+          <td>{{ item.game_format != 3 ? item.group_count : '' }}</td>
           <td>{{ item.count }}</td>
-          <td>{{ game_status[item.game_status] }}</td>
+          <td>{{ item.game_format == 3 ? (item.game_status == 1 ? '进行中' : game_status[item.game_status]) : game_status[item.game_status] }}</td>
           <td>{{ item.game_sort }}</td>
           <td>
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-primary btn-sm" @click="viewplayers(item.id)">查看参赛选手</button>
-              <button type="button" class="btn btn-primary btn-sm" @click="startSign(item, index)" v-if="!item.sign && config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && item.game_status == 0">开始报名</button>
-              <button type="button" class="btn btn-primary btn-sm" @click="copySignUrl(item.id)" v-if="item.sign">复制报名链接</button>
+              <button type="button" class="btn btn-primary btn-sm" @click="startSign(item, index)" v-if="item.game_format != 3 && !item.sign && config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && item.game_status == 0">开始报名</button>
+              <button type="button" class="btn btn-primary btn-sm" @click="copySignUrl(item.id)" v-if="item.game_format != 3 && item.sign">复制报名链接</button>
               <button type="button" class="btn btn-primary btn-sm" v-if="item.game_status > 0"
                 @click="viewmatchs(item)">查看对局</button>
-              <button type="button" class="btn btn-success btn-sm" v-if="item.game_status == 0"
+              <button type="button" class="btn btn-success btn-sm" v-if="item.game_status == 0 || (item.game_format == 3 && (item.game_status == 0 || item.game_status == 3))"
                 @click="startGames1(item.id)">开始</button>
               <button type="button" class="btn btn-danger btn-sm" v-if="item.game_status == 1"
                 @click="stopGames(item.id)">结束</button>
@@ -148,7 +148,7 @@
       </tbody>
     </table>
   </div>
-  <mypage :page="list.page" :maxPage="list.maxPage" :count="list.count" @getList="getList"></MyPage>
+  <mypage :page="list.page" :maxPage="list.maxPage" :count="list.count" @getList="getList"></mypage>
 </template>
 <script>
 import { writeText } from '@tauri-apps/api/clipboard'
@@ -217,6 +217,23 @@ export default {
     }
   },
   methods: {
+    stopGames(id){
+      layer.confirm('结束比赛将不能再更改比赛信息，确定结束比赛吗？', async index => {
+        try {
+          localStorage.removeItem(`signMatch${id}`)
+        } catch (error) {
+        }
+        await writeTextFile('obs/game_name.txt', '', { dir: BaseDirectory.App })
+        await writeTextFile('obs/match.txt', '', { dir: BaseDirectory.App })
+        await writeTextFile('obs/p1_title.txt', '', { dir: BaseDirectory.App })
+        await writeTextFile('obs/p2_title.txt', '', { dir: BaseDirectory.App })
+        await writeTextFile('obs/p1_score.txt', '', { dir: BaseDirectory.App })
+        await writeTextFile('obs/p2_score.txt', '', { dir: BaseDirectory.App })
+        await this.$db.execute("update games set game_status = 3 where id = ?", [id])
+        layer.close(index)
+        await this.getList()
+      })
+    },
     saveApiConfig (){
       localStorage.setItem('config', JSON.stringify(this.config))
       this.configApiShow = false
@@ -388,24 +405,30 @@ export default {
           layer.msg('参赛选手人数不能小于2人')
           return
         }
-        if (game[0].game_format == 1 && players[0].mycount < 3) {
-          layer.msg('双败参赛人数不能小于3人')
-          return
-        }
-        if((players[0].mycount / 4) < Math.ceil(game[0].group_nums / 2) && game[0].group_count > 1){
-          layer.msg(`参赛选手人数太少，需要保证每个小组最少${Math.ceil(game[0].group_nums / 2)}人`)
-          return
-        }
-        if(players[0].mycount > game[0].group_nums*game[0].group_count){
-          layer.msg('参赛人数太多了')
-          return
+        if(game[0].game_format != 3){
+          if (game[0].game_format == 1 && players[0].mycount < 3) {
+            layer.msg('双败参赛人数不能小于3人')
+            return
+          }
+          if((players[0].mycount / 4) < Math.ceil(game[0].group_nums / 2) && game[0].group_count > 1){
+            layer.msg(`参赛选手人数太少，需要保证每个小组最少${Math.ceil(game[0].group_nums / 2)}人`)
+            return
+          }
+          if(players[0].mycount > game[0].group_nums*game[0].group_count){
+            layer.msg('参赛人数太多了')
+            return
+          }
+          this.showStartForm = true
+          this.start_id = id
+        }else{
+          await this.$db.execute("update games set game_status = 1 where id = ?", [id])
+          await writeTextFile('obs/game_name.txt', game[0].title, { dir: BaseDirectory.App })
+          this.$router.push('/matchs_friend/' + id)
         }
       }else{
         layer.msg('未找到该比赛')
         return        
       }
-      this.showStartForm = true
-      this.start_id = id
     },
     async startGames(id) {
       const startGame = await this.$db.select("select id from games where game_status in (1, 2)")
@@ -695,10 +718,14 @@ export default {
       layer.closeAll()
     },
     viewmatchs(item) {
-      if(item.game_status == 2){
-        this.$router.push(`/matchs/${item.id}/1`)
+      if(item.game_format != 3){
+        if(item.game_status == 2){
+          this.$router.push(`/matchs/${item.id}/1`)
+        }else{
+          this.$router.push(`/matchs/${item.id}`)
+        }
       }else{
-        this.$router.push(`/matchs/${item.id}`)
+        this.$router.push(`/matchs_friend/${item.id}`)
       }
     },
     async clearData() {
