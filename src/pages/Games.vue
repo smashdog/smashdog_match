@@ -132,7 +132,7 @@
               <button type="button" class="btn btn-primary btn-sm" @click="viewplayers(item.id)">查看参赛选手</button>
               <button type="button" class="btn btn-primary btn-sm" @click="startSign(item, index)" v-if="item.game_format != 3 && !item.sign && config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && item.game_status == 0">开始报名</button>
               <button type="button" class="btn btn-primary btn-sm" @click="copySignUrl(item.id)" v-if="item.game_format != 3 && item.sign">复制报名链接</button>
-              <button type="button" class="btn btn-primary btn-sm" v-if="item.game_status > 0"
+              <button type="button" class="btn btn-primary btn-sm" v-if="(item.game_format != 3 && item.game_status > 0) || (item.game_format == 3 && item.game_status == 1)"
                 @click="viewmatchs(item)">查看对局</button>
               <button type="button" class="btn btn-success btn-sm" v-if="item.game_status == 0 || (item.game_format == 3 && (item.game_status == 0 || item.game_status == 3))"
                 @click="startGames1(item.id)">开始</button>
