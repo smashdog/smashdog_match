@@ -1,13 +1,25 @@
-form{
-    min-width: 768px;
-    max-width: 1080px;
+form {
+  width: 100vw;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 10px;
+
+  >* {
+    width: 540px;
     margin: 0 auto;
-    >*{
-      width: 540px;
-      margin: 0 auto;
-    }
-    >h4{
-      margin: 0 auto 20px auto;
-      padding-top: 20px;
+  }
+
+  >h4 {
+    margin: 0 auto 20px auto;
+    padding-top: 20px;
+    width: 100%;
+  }
+
+  >.mb-3{
+    width: 100%;
+    .form-control {
+      max-width: 540px;
+      // min-width: 50vw;
     }
   }
+}
