@@ -20,6 +20,10 @@
       <button type="button" class="btn btn-success btn-sm" @click="submit()">提交</button>
       <button type="button" class="btn btn-secondary btn-sm" @click="$router.push(`/`)">取消</button>
     </div>
+    <div class="mb-3">
+      <button type="button" class="btn btn-primary btn-sm" @click="$router.push('/login')">立即登录</button>
+      <button type="button" class="btn btn-primary btn-sm" @click="$router.push('/findpwd')">找回密码</button>
+    </div>
   </form>
   <Verify
       mode="pop"

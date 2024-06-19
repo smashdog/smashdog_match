@@ -16,6 +16,7 @@
       <button type="button" class="btn btn-secondary btn-sm" @click="$router.push(`/`)">取消</button>
     </div>
     <div class="mb-3">
+      <button type="button" class="btn btn-primary btn-sm" @click="$router.push('/register')">立即注册</button>
       <button type="button" class="btn btn-primary btn-sm" @click="$router.push('/findpwd')">找回密码</button>
     </div>
   </form>
