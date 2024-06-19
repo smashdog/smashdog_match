@@ -66,10 +66,6 @@ const submit = async () => {
     layer.msg('两次密码不一致')
     return
   }
-  if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/.test(form.password)){
-    layer.msg('密码必须包含大小写字母、数字和特殊字符，长度至少为8位')
-    return
-  }
   if(!localStorage.getItem('captchaVerification')){
     captchaType.value = 'blockPuzzle'
     verify.value.show()

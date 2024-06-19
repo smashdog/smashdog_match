@@ -28,10 +28,10 @@ switch ($_POST['action'] ?? '') {
             break;
         }
         // 验证密码是否为复杂密码，包含特殊字符、数字、大小写字母
-        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $_POST['password'])) {
-            json_return(9, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
-            break;
-        }
+        // if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $_POST['password'])) {
+        //     json_return(9, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
+        //     break;
+        // }
         // 二次验证码验证
         if(!validate($config)){
             json_return(21, "人机验证失败");
@@ -99,10 +99,10 @@ switch ($_POST['action'] ?? '') {
             break;
         }
         // 验证密码是否为复杂密码，包含特殊字符、数字、大小写字母
-        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $_POST['password'])) {
-            json_return(17, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
-            break;
-        }
+        // if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $_POST['password'])) {
+        //     json_return(17, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
+        //     break;
+        // }
         // 二次验证码验证
         if(!validate($config)){
             json_return(21, "人机验证失败");
@@ -218,10 +218,10 @@ switch ($_POST['action'] ?? '') {
         }
         $password = $_POST['password'] ?? '';
         $repassword = $_POST['repassword'] ?? '';
-        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $password)) {
-            json_return(17, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
-            break;
-        }
+        // if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}$/', $password)) {
+        //     json_return(17, "密码格式错误，必须包含特殊字符（@$!%*?&）、数字、大小写字母，长度必须大于8");
+        //     break;
+        // }
         if ($password !== $repassword) {
             json_return(29, "两次密码不一致");
             break;
