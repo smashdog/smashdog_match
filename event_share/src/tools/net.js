@@ -1,4 +1,8 @@
-export async function myFetch (url, params) {
+export async function myFetch(url, params) {
+  let isios = false
+  if(/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)){
+		isios = true
+	}
   let formdata = new FormData()
   if (typeof params == 'object') {
     for (let i in params) {
@@ -6,12 +10,19 @@ export async function myFetch (url, params) {
     }
   }
   try {
-    let loading = layer.load()
-    let res = await fetch(`${import.meta.env.VITE_HOST}${url}`, {
-      method: 'POST',
-      body: formdata,
-      signal: AbortSignal.timeout(5000)
-    })
+    let loading = layer.load(), res
+    if(!isios){
+      res = await fetch(`${import.meta.env.VITE_HOST}${url}`, {
+        method: 'POST',
+        body: formdata,
+        signal: AbortSignal.timeout(5000)
+      })
+    }else{
+      res = await fetch(`${import.meta.env.VITE_HOST}${url}`, {
+        method: 'POST',
+        body: formdata
+      })
+    }
     layer.close(loading)
     if (res.status != 200) {
       return { code: -1, msg: '网络错误' }
