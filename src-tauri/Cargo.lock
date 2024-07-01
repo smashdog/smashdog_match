@@ -2197,7 +2197,7 @@ dependencies = [
 
 [[package]]
 name = "match"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "project-root",
  "serde",

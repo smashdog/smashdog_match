@@ -236,7 +236,6 @@ app.config.globalProperties.$tfetch = async (url = "", data = {}) => {
 app.config.globalProperties.$postData = async (url = "", data = {}) => {
   let formdata = new FormData()
   for(let key in data){
-    console.log(data[key])
     formdata.append(key, data[key])
   }
   let controller = new AbortController()
@@ -252,7 +251,6 @@ app.config.globalProperties.$postData = async (url = "", data = {}) => {
     signal: controller.signal,
   })
   try {
-    console.log(response)
     return await response.text()
   } catch (error) {
     console.error(error)

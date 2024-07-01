@@ -24,7 +24,7 @@
               <div v-for="(match, k) in levels" class="item"
                 :style="{ paddingTop: (j >= winner_idx ? winner_idx : j) > 0 ? 30 * 2 ** (j >= winner_idx ? winner_idx : j) - 30 + 'px' : 0, paddingBottom: (j >= winner_idx ? winner_idx : j) > 0 ? 30 * 2 ** (j >= winner_idx ? winner_idx : j) - 30 + 'px' : 0 }">
                 <div class="item_left">
-                  <div class="round layui-badge"> {{ match.group_sort + 1 }}</div>
+                  <div class="round layui-badge" @click="copy1p2p(match)"> {{ match.group_sort + 1 }}</div>
                 </div>
                 <div
                   class="list-group">
@@ -77,7 +77,7 @@
               <div v-for="(match, k) in levels" class="item"
                 :style="{ paddingTop: (Math.floor(j / 2) >= loser_idx ? loser_idx : Math.floor(j / 2)) > 0 ? 30 * 2 ** (Math.floor(j / 2) >= loser_idx ? loser_idx : Math.floor(j / 2)) - 30 + 'px' : 0, paddingBottom: Math.floor(j / 2) > 0 ? 30 * 2 ** (Math.floor(j / 2) >= loser_idx ? loser_idx : Math.floor(j / 2)) - 30 + 'px' : 0 }">
                 <div class="item_left">
-                  <div class="round layui-badge"> {{ match.group_sort + 1 }}</div>
+                  <div class="round layui-badge" @click="copy1p2p(match)"> {{ match.group_sort + 1 }}</div>
                 </div>
                 <div
                   class="list-group">
@@ -280,6 +280,10 @@ export default {
     await this.getAllMatchs(true)
   },
   methods: {
+    async copy1p2p(match){
+      await writeText(`1p ${match.change_user_place == 0 ? match.player_one_title : match.player_two_title} VS 2p ${match.change_user_place == 0 ? match.player_two_title : match.player_one_title}`)
+      layer.msg('已复制对战双方信息到剪贴板！')
+    },
     async share(){
       let url = this.config.shareApi.url.match(/(https?:\/\/[^/]+)\//i)
       await writeText(`${url[0]}#/matchs/${this.config.shareApi.key}/${this.game.id}`)
