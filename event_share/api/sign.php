@@ -19,11 +19,6 @@ switch($action ?? ''){
         json_return($is_sign[0], $is_sign[1], signList($is_sign, $config));
         break;
     case 'sign':
-        // 二次验证码验证
-        if(!validate($config)){
-            json_return(21, "人机验证失败");
-            break;
-        }
         $is_sign = checkSign();
         if($is_sign[0] != 0){
             json_return($is_sign[0], $is_sign[1]);

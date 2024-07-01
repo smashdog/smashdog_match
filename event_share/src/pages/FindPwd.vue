@@ -7,56 +7,47 @@
         v-model="form.email" autocomplete="off">
     </div>
     <div class="mb-3">
+      <label for="captcha" class="form-label">验证码</label>
+      <input type="text" class="form-control" id="captcha" name="captcha" placeholder="请输入验证码" required
+        v-model="form.captcha" autocomplete="off">
+      <img :src="captcha" alt="" @click="changeCaptcha()">
+    </div>
+    <div class="mb-3">
       <button type="button" class="btn btn-success btn-sm" @click="submit()">提交</button>
       <button type="button" class="btn btn-secondary btn-sm" @click="$router.push(`/`)">取消</button>
     </div>
   </form>
-  <Verify
-      mode="pop"
-      :captchaType="captchaType"
-      :imgSize="{width:'400px',height:'200px'}"
-      ref="verify"
-      @success="handleSuccess"
-    ></Verify>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Verify from '../components/verifition/Verify.vue'
 import { myFetch } from '../tools/net.js'
 const router = useRouter()
 const form = ref({
-  email: ''
+  email: '',
+  captcha: '',
 })
-const verify = ref(null)
-const captchaType = ref('')
-const handleSuccess = (res)=>{
-  if(res){
-    localStorage.setItem('captchaVerification', res.captchaVerification ?? '')
-    submit()
-  }
-}
+const captcha = ref(`${import.meta.env.VITE_HOST}/api/captcha.php?action=get`)
 const submit = async ()=>{
   if(!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.value.email)){
     layer.msg('邮箱格式不正确')
     return
   }
-  if(!localStorage.getItem('captchaVerification')){
-    captchaType.value = 'blockPuzzle'
-    verify.value.show()
-    return
-  }
   const res = await myFetch('/api/user.php', {
-    captchaVerification: localStorage.getItem('captchaVerification'),
+    captcha: form.value.captcha,
     email: form.value.email,
     action: 'find_pwd',
   })
-  localStorage.removeItem('captchaVerification')
   layer.msg(res.msg)
   if(res.code == 0){
     router.push({path: '/changepwd', query: {email: form.value.email}})
+    return
   }
+  changeCaptcha()
+}
+const changeCaptcha = () => {
+  captcha.value = `${import.meta.env.VITE_HOST}/api/captcha.php?action=get&r=${Math.random()}`
 }
 </script>
 

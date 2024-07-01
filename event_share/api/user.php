@@ -33,7 +33,7 @@ switch ($_POST['action'] ?? '') {
         //     break;
         // }
         // 二次验证码验证
-        if(!validate($config)){
+        if(!validate()){
             json_return(21, "人机验证失败");
         }
         // 写入数据库
@@ -104,7 +104,7 @@ switch ($_POST['action'] ?? '') {
         //     break;
         // }
         // 二次验证码验证
-        if(!validate($config)){
+        if(!validate()){
             json_return(21, "人机验证失败");
             break;
         }
@@ -151,7 +151,7 @@ switch ($_POST['action'] ?? '') {
         break;
     case 'find_pwd':
         // 二次验证码验证
-        if(!validate($config)){
+        if(!validate()){
             json_return(21, "人机验证失败");
             break;
         }
@@ -193,7 +193,7 @@ switch ($_POST['action'] ?? '') {
         break;
     case 'change_pwd':
         // 二次验证码验证
-        if(!validate($config)){
+        if(!validate()){
             json_return(21, "人机验证失败");
             break;
         }

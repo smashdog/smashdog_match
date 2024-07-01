@@ -12,6 +12,12 @@
         v-model="form.password" autocomplete="off">
     </div>
     <div class="mb-3">
+      <label for="captcha" class="form-label">验证码</label>
+      <input type="text" class="form-control" id="captcha" name="captcha" placeholder="请输入验证码" required
+        v-model="form.captcha" autocomplete="off">
+      <img :src="captcha" alt="" @click="changeCaptcha()">
+    </div>
+    <div class="mb-3">
       <button type="button" class="btn btn-success btn-sm" @click="submit()">提交</button>
       <button type="button" class="btn btn-secondary btn-sm" @click="$router.push(`/`)">取消</button>
     </div>
@@ -20,60 +26,45 @@
       <button type="button" class="btn btn-primary btn-sm" @click="$router.push('/findpwd')">找回密码</button>
     </div>
   </form>
-  <Verify
-      mode="pop"
-      :captchaType="captchaType"
-      :imgSize="{width:'400px',height:'200px'}"
-      ref="verify"
-      @success="handleSuccess"
-    ></Verify>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Verify from '../components/verifition/Verify.vue'
 import { myFetch } from '../tools/net.js'
 const form = {
   email: '',
   password: '',
+  captcha: '',
 }
 const router = useRouter()
-const verify = ref(null)
-const captchaType = ref('')
-const handleSuccess = (res)=>{
-  if(res){
-    localStorage.setItem('captchaVerification', res.captchaVerification ?? '')
-    submit()
-  }
-}
+const captcha = ref(`${import.meta.env.VITE_HOST}/api/captcha.php?action=get`)
 const submit = async () => {
-  if(!form.email || !form.password){
+  if (!form.email || !form.password) {
     layer.msg('请填写完整的表单')
     return
   }
-  if(!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.email)){
+  if (!/^[a-zA-Z0-9\-_]+@[a-zA-Z0-9\-\.]+\.[a-zA-Z0-9]+$/.test(form.email)) {
     layer.msg('邮箱格式不正确')
     return
   }
-  if(!localStorage.getItem('captchaVerification')){
-    captchaType.value = 'blockPuzzle'
-    verify.value.show()
-    return
-  }
   let res = await myFetch('/api/user.php', {
-    captchaVerification: localStorage.getItem('captchaVerification'),
+    captcha: form.captcha,
     email: form.email,
     password: form.password,
     action: 'login',
   })
   localStorage.removeItem('captchaVerification')
-  if(res.code == 0){
+  if (res.code == 0) {
     localStorage.setItem('token', res.data.token)
     await router.push('/sign')
     return
   }
   layer.msg(res.msg)
+  changeCaptcha()
+}
+const changeCaptcha = () => {
+  captcha.value = `${import.meta.env.VITE_HOST}/api/captcha.php?action=get&r=${Math.random()}`
 }
 </script>
 

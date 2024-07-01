@@ -1,9 +1,8 @@
 <?php
+session_start();
 
-use  \Fastknife\Service\BlockPuzzleCaptchaService;
 use think\facade\Db;
 
-session_start();
 function json_return($code = 0, $msg = '', $data = [])
 {
     echo json_encode([
@@ -82,17 +81,9 @@ function getUser($token)
     return $user;
 }
 
-function validate($config){
-    // 二次验证码验证
-    $service = new BlockPuzzleCaptchaService($config['captcha']);
-    $captchaVerification = $_POST['captchaVerification'] ?? '';
-    $success = false;
-    try {
-        $service->verificationByEncryptCode($captchaVerification);
-        $success = true;
-    } catch (\Exception $e) {
-    }
-    return $success;
+function validate(){
+    // 验证码验证
+    return $_SESSION['phrase'] == strtolower($_POST['captcha']);
 }
 
 function createGame(){

@@ -60,22 +60,12 @@
       </table>
     </div>
   </div>
-  <Verify
-      mode="pop"
-      :captchaType="captchaType"
-      :imgSize="{width:'400px',height:'200px'}"
-      ref="verify"
-      @success="handleSuccess"
-    ></Verify>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import Verify from '../components/verifition/Verify.vue'
 import { myFetch } from '../tools/net.js'
-const verify = ref(null)
-const captchaType = ref('')
 const router = useRouter()
 const route = useRoute()
 const game = ref({})
@@ -86,19 +76,14 @@ const form = ref({
   weixin: '',
   fastcopy: '',
   k: null,
-  action: 'sign'
+  action: 'sign',
 })
 const list = ref({
   title: {},
   game: {},
   list: []
 });
-const handleSuccess = (res)=>{
-  if(res){
-    localStorage.setItem('captchaVerification', res.captchaVerification ?? '')
-    submit()
-  }
-}
+const captcha = ref(`${import.meta.env.VITE_HOST}/api/captcha.php?action=get`)
 const submit = async () => {
   const msg = {
     nickname: '昵称',
@@ -111,11 +96,6 @@ const submit = async () => {
       return
     }
   }
-  if(!localStorage.getItem('captchaVerification')){
-    captchaType.value = 'blockPuzzle'
-    verify.value.show()
-    return
-  }
   const values = {
     nickname: form.value.nickname,
     weixin: form.value.weixin,
@@ -123,12 +103,10 @@ const submit = async () => {
     id: route.query.key && route.query.id ? route.query.id : localStorage.getItem('save') ? JSON.parse(localStorage.getItem('save')).id : '',
     key: route.query.key && route.query.id ? route.query.key : localStorage.getItem('save') ? JSON.parse(localStorage.getItem('save')).key : '',
     action: form.value.action,
-    captchaVerification: localStorage.getItem('captchaVerification'),
     token: localStorage.getItem('token'),
     k: form.value.k
   }
   let res = await myFetch('/api/sign.php', values)
-  localStorage.removeItem('captchaVerification')
   layer.msg(res.msg)
   if(res.code == 0){
     if(form.value.action == 'sign'){
@@ -137,6 +115,7 @@ const submit = async () => {
     await getList()
     return
   }
+  captcha.value = `${import.meta.env.VITE_HOST}/api/captcha.php?action=get&r=${Math.random()}`
 }
 const getList = async () => {
   let save = JSON.parse(localStorage.getItem('save'))
@@ -206,6 +185,9 @@ onMounted(async () => {
     }
   }
 })
+const changeCaptcha = () => {
+  captcha.value = `${import.meta.env.VITE_HOST}/api/captcha.php?action=get&r=${Math.random()}`
+}
 </script>
 
 <style scoped lang="less">
