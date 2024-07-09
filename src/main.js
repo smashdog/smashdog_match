@@ -238,24 +238,17 @@ app.config.globalProperties.$postData = async (url = "", data = {}) => {
   for(let key in data){
     formdata.append(key, data[key])
   }
-  let controller = new AbortController()
-  controller.signal.addEventListener('abort', () => layer.msg('请求超时'))
-  let t = setTimeout(() => {
-    controller.abort()
-  }, 5000)
   const response = await fetch(url, {
     method: "POST",
     cache: "no-cache",
     mode: "no-cors",
     body: formdata,
-    signal: controller.signal,
   })
   try {
     return await response.text()
   } catch (error) {
     console.error(error)
   }
-  clearTimeout(t)
   try {
   } catch (error) {
     
