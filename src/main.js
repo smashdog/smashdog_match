@@ -223,37 +223,16 @@ app.config.globalProperties.$tfetch = async (url = "", data = {}) => {
     let res = await tfetch(url, {
       method: "POST",
       timeout: 5,
-      body: body
+      body: body,
     })
     layer.close(index)
     return res.data
   } catch (error) {
-    layer.close(index)
+    console.log(error)
     return {code: -1, msg: '网络错误'}
   }
 }
 
-app.config.globalProperties.$postData = async (url = "", data = {}) => {
-  let formdata = new FormData()
-  for(let key in data){
-    formdata.append(key, data[key])
-  }
-  const response = await fetch(url, {
-    method: "POST",
-    cache: "no-cache",
-    mode: "no-cors",
-    body: formdata,
-  })
-  try {
-    return await response.text()
-  } catch (error) {
-    console.error(error)
-  }
-  try {
-  } catch (error) {
-    
-  }
-}
 app.config.globalProperties.$sendShare = async (data) => {
   if(!localStorage.getItem('config')){
     return false
@@ -267,7 +246,7 @@ app.config.globalProperties.$sendShare = async (data) => {
   }
   data.action = 'update'
   data.key = config.shareApi.key
-  await app.config.globalProperties.$postData(config.shareApi.url, data)
+  await app.config.globalProperties.$tfetch(config.shareApi.url, data)
 }
 
 app.use(router).use(Vue3Dragscroll).use(tooltip).mount('#app')
