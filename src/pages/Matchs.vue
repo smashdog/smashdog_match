@@ -417,11 +417,20 @@ export default {
       layer.msg('复制成功')
     },
     async writeFile(chars, i, j, k) {
+      let player_one_title = this[chars][i][j][k].player_one_title, player_two_title = this[chars][i][j][k].player_two_title
+      if(this[chars][i][j][k].parent_id_1 != 0 && this[chars][i][j][k].parent_id_2 != 0){
+        const parent_match1 = await this.$db.select("select match_type from matchs where id = ?", [this[chars][i][j][k].parent_id_1])
+        const parent_match2 = await this.$db.select("select match_type from matchs where id = ?", [this[chars][i][j][k].parent_id_2])
+        if(parent_match1[0].match_type != parent_match2[0].match_type){
+          player_one_title = `${this[chars][i][j][k].player_one_title}(${parent_match1[0].match_type == 1 ? 'W' : 'L'})`
+          player_two_title = `${this[chars][i][j][k].player_two_title}(${parent_match2[0].match_type == 1 ? 'W' : 'L'})`
+        }
+      }
       await writeTextFile('obs/match.txt', `第${i+1}组${chars == 'winner_matchs' ? '胜者' : '败者'}第${j + 1}轮`, { dir: BaseDirectory.App })
-      await writeTextFile('obs/p1_title.txt', this[chars][i][j][k].player_one_title, { dir: BaseDirectory.App })
-      await writeTextFile('obs/p2_title.txt', this[chars][i][j][k].player_two_title, { dir: BaseDirectory.App })
-      await writeTextFile('obs/p1_score.txt', this[chars][i][j][k].player_one_score + '', { dir: BaseDirectory.App })
-      await writeTextFile('obs/p2_score.txt', this[chars][i][j][k].player_two_score + '', { dir: BaseDirectory.App })
+      await writeTextFile('obs/p1_title.txt', this[chars][i][j][k].change_user_place == 0 ? player_one_title : player_two_title, { dir: BaseDirectory.App })
+      await writeTextFile('obs/p2_title.txt', this[chars][i][j][k].change_user_place == 0 ? player_two_title : player_one_title, { dir: BaseDirectory.App })
+      await writeTextFile('obs/p1_score.txt', this[chars][i][j][k].change_user_place == 0 ? this[chars][i][j][k].player_one_score + '' : this[chars][i][j][k].player_two_score + '', { dir: BaseDirectory.App })
+      await writeTextFile('obs/p2_score.txt', this[chars][i][j][k].change_user_place == 0 ? this[chars][i][j][k].player_two_score + '' : this[chars][i][j][k].player_one_score + '', { dir: BaseDirectory.App })
     },
     async startMatch(chars, i, j, k) {
       if (this.start_id != 0 && this.start_id != this[chars][i][j][k].id) {
@@ -535,7 +544,6 @@ export default {
             next_winer_match = p1[1]
             next_loser_match = p1[0]
           }
-        }else if(p1.length == 1 && p1[0].parent_id_1 == p1[0].parent_id_2){// 下一场是最后一场不需要处理
         }else if(p1.length == 1){//只有一场的情况
           if(p1[0].match_type == 1){
             next_winer_match = p1[0]
@@ -545,15 +553,24 @@ export default {
         }
         // 修改后面场次数据
         if(next_winer_match){
-          let chars = ''
-          if(this.form.id == next_winer_match.parent_id_1){
-            chars = 'player_one_id'
+          if(next_winer_match.parent_id_1 == next_winer_match.parent_id_2){ // 决赛最后一场
+            const parent_match1 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_1])
+            const parent_match2 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_2])
+            if((this.form.winner == 1 && parent_match1[0].match_type == 2) || (this.form.winner == 2 && parent_match2[0].match_type == 2)){
+              await this.$db.execute('update matchs set player_one_id = ?, player_two_id = ? where id = ?', [this.form.player_one_id, this.form.player_two_id, next_winer_match.id])
+              loadIds.push(next_winer_match.id)
+            }
           }else{
-            chars = 'player_two_id'
-          }
-          if(next_winer_match[chars] == 0){
-            await this.$db.execute('update matchs set ' + chars + ' = ? where id = ?', [this.form.winner == 1 ? this.form.player_one_id : this.form.player_two_id, next_winer_match.id])
-            loadIds.push(next_winer_match.id)
+            let chars = ''
+            if(this.form.id == next_winer_match.parent_id_1){
+              chars = 'player_one_id'
+            }else{
+              chars = 'player_two_id'
+            }
+            if(next_winer_match[chars] == 0){
+              await this.$db.execute('update matchs set ' + chars + ' = ? where id = ?', [this.form.winner == 1 ? this.form.player_one_id : this.form.player_two_id, next_winer_match.id])
+              loadIds.push(next_winer_match.id)
+            }
           }
         }
         if(next_loser_match){
@@ -687,12 +704,20 @@ export default {
         this.start_id = 0
       }
       if(this.form.change_user_place != source.change_user_place && this.form.match_status == 1){
+        if(this.form.parent_id_1 != 0 && this.form.parent_id_2 != 0){
+          const parent_match1 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_1])
+          const parent_match2 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_2])
+          if(parent_match1[0].match_type != parent_match2[0].match_type){
+            player_one_title = `${this.form.player_one_title}(${parent_match1[0].match_type == 1 ? 'W' : 'L'})`
+            player_two_title = `${this.form.player_two_title}(${parent_match2[0].match_type == 1 ? 'W' : 'L'})`
+          }
+        }
         if(this.form.change_user_place == 0){
-          await writeTextFile('obs/p1_title.txt', this.form.player_one_title, { dir: BaseDirectory.App })
-          await writeTextFile('obs/p2_title.txt', this.form.player_two_title, { dir: BaseDirectory.App })
+          await writeTextFile('obs/p1_title.txt', player_one_title, { dir: BaseDirectory.App })
+          await writeTextFile('obs/p2_title.txt', player_two_title, { dir: BaseDirectory.App })
         }else{
-          await writeTextFile('obs/p2_title.txt', this.form.player_one_title, { dir: BaseDirectory.App })
-          await writeTextFile('obs/p1_title.txt', this.form.player_two_title, { dir: BaseDirectory.App })
+          await writeTextFile('obs/p2_title.txt', player_one_title, { dir: BaseDirectory.App })
+          await writeTextFile('obs/p1_title.txt', player_two_title, { dir: BaseDirectory.App })
         }
       }
       if(this.form.change_user_place == 0){
