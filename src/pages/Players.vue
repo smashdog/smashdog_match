@@ -4,6 +4,7 @@
     <div class="btn-group" role="group">
       <button type="button" class="btn btn-sm btn-primary" @click="sync()" v-if="config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && game.game_format != 3">同步报名数据</button>
       <button type="button" class="btn btn-sm btn-success" @click="showAdd = true" v-if="(game.game_status == 0 && game.game_format != 3 && this.list.count < (game.group_nums * game.group_count)) || game.game_format == 3">添加选手</button>
+      <button type="button" class="btn btn-sm btn-success" @click="showBatchAdd = true">批量添加选手</button>
       <button type="button" class="btn btn-sm btn-primary" @click="randPlayers()" v-if="game.game_status == 0 && game.game_format != 3">打乱选手</button>
       <button type="button" class="btn btn-sm btn-secondary" @click="$router.push('/games')">返回比赛列表</button>
     </div>
@@ -25,6 +26,24 @@
       <div class="mb-3">
         <button type="button" class="btn btn-sm btn-success" @click="submit()">提交</button>
         <button type="button" class="btn btn-sm btn-secondary" @click="showAdd = false">取消</button>
+      </div>
+    </form>
+  </div>
+  <div class="add_player window" v-show="showBatchAdd">
+    <form class="div_form">
+      <div class="mb-3">
+        <textarea style="min-width: 60vw;" id="batchAddTextarea" rows="10" class="form-form-control" v-model="batchAddInfo" placeholder="一行一个选手，内容为：选手名称,快速复制内容,排序例如：
+张三,123456,0
+李四,654321,1
+王五,789321,2
+如果没有后两项，可以每行只输入选手姓名即可，例如：
+张三
+李四
+王五"></textarea>
+      </div>
+      <div class="mb-3">
+        <button type="button" class="btn btn-sm btn-success" @click="batchSubmit()">提交</button>
+        <button type="button" class="btn btn-sm btn-secondary" @click="showBatchAdd = false">取消</button>
       </div>
     </form>
   </div>
@@ -76,6 +95,7 @@ export default {
       },
       game_id: 0,
       showAdd: false,
+      showBatchAdd: false,
       game: {
         title: '',
         game_status: 0,
@@ -84,6 +104,7 @@ export default {
         group_count: 0,
       },
       players: [],
+      batchAddInfo: '',
       form: {
         id: 0,
         title: '',
@@ -268,6 +289,46 @@ export default {
           return
         }
       })
+    },
+    async batchSubmit() {
+      this.showBatchAdd = false
+      if(this.batchAddInfo.trim().length == 0){
+        layer.msg('选手内容为空')
+      }
+      const load = layer.load()
+      const data = this.batchAddInfo.trim().split("\n")
+      let has = ''
+      let err = ''
+      let nums = 0
+      for(let i = 0; i < data.length; i ++){
+        let temp = data[i].split(',')
+        const title = temp[0].trim()
+        const fast_copy = temp[1] ?? ''
+        let sort = temp[2] ?? 0
+        try {
+          
+          if(/^\d+$/.test(sort)){
+            sort = Number(sort)
+          }
+        } catch (error) {
+          console.log(temp, sort)
+          return
+        }
+        if(temp[0].length == 0){
+          err += (err.length == 0 ? '' : ',') + (i + 1)
+          continue
+        }
+        let sqlreturn = await this.$db.select("select id from players where game_id = ? and title = ?", [this.game_id, title])
+        if (sqlreturn.length > 0) {
+          has += (has.length == 0 ? '' : ',') + temp[0]
+          continue
+        }
+        await this.$db.execute("insert into players (title, game_id,fast_copy,sort_num) values (?, ?, ?, ?)", [title, this.game_id, fast_copy, sort])
+        nums ++
+      }
+      layer.close(load)
+      let msg = '批量添加完成' + (err.length > 0 ? `<br>其中第${err}行姓名为空因此没有添加` : '') + (has.length > 0 ? `<br>其中“${has}”选手已经存在因此没有添加` : '')
+      layer.alert(msg)
     }
   }
 }
