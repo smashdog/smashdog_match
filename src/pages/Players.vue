@@ -16,6 +16,12 @@
         <input type="text" class="form-control" id="player_title" name="player_title" placeholder="请输入选手名称" v-model="form.title" autocomplete="off">
       </div>
       <div class="mb-3">
+        <label for="player_country" class="form-label">国家/地区</label>
+        <select name="player_country" id="player_country" class="form-select" v-model="form.country">
+          <option v-for="(value, index) in country" :value="index" :selected="form.id && form.country == index">{{value.二位代码}} {{value.中文名称}}</option>
+        </select>
+      </div>
+      <div class="mb-3">
         <label for="fast_copy" class="form-label">快速复制内容（例如街霸6用户码）</label>
         <input type="text" class="form-control" id="fast_copy" name="fast_copy" placeholder="请输入快速复制内容" v-model="form.fast_copy" autocomplete="off">
       </div>
@@ -52,6 +58,7 @@
       <table class="table table-hover">
         <thead>
           <th>选手名称</th>
+          <th>国家/地区</th>
           <th>快速复制内容</th>
           <th>排序</th>
           <th>操作</th>
@@ -59,6 +66,12 @@
         <tbody>
           <tr v-for="(player, index) in list.data">
             <td>{{ player.title }}</td>
+            <td>
+              <span v-if="player.country">
+                {{country[player.country].二位代码}} {{country[player.country].中文名称}}
+                <img :src="getFlagSrc(country[player.country].二位代码)" class="flag-icon" width="32" />
+              </span>
+            </td>
             <td @click="fastCopy(player.fast_copy)">{{ player.fast_copy }}</td>
             <td>{{ player.sort_num }}</td>
             <td>
@@ -110,10 +123,13 @@ export default {
         title: '',
         fast_copy: '',
         sort_num: 0,
+        country: 0,
       },
+      country: {}
     }
   },
   async mounted() {
+    this.country = this.$country
     let config = {}
     if(!localStorage.getItem('config')){
       config = {
@@ -193,6 +209,9 @@ export default {
       }
       this.getList()
     },
+    getFlagSrc(code){
+      return this.$getFlagSrc(code)
+    },
     async fastCopy(text) {
       if (text.length == 0) {
         return
@@ -243,16 +262,17 @@ export default {
           layer.msg('该选手已存在')
           return
         }
-        await this.$db.execute("insert into players (title, game_id,fast_copy,sort_num) values (?, ?, ?, ?)", [this.form.title, this.game_id, this.form.fast_copy, this.form.sort_num])
+        await this.$db.execute("insert into players (title, game_id,fast_copy,sort_num, country) values (?, ?, ?, ?, ?)", [this.form.title, this.game_id, this.form.fast_copy, this.form.sort_num, this.form.country])
       } else {
         sqlreturn = await this.$db.select("select id from players where game_id = ? and title = ? and id <> ?", [this.game_id, this.form.title, this.form.id])
         if (sqlreturn.length > 0) {
           layer.msg('该选手已存在')
           return
         }
-        await this.$db.execute("update players set title = ?, fast_copy = ?, sort_num = ? where id = ?", [this.form.title, this.form.fast_copy, this.form.sort_num, this.form.id])
+        console.log(this.form)
+        await this.$db.execute("update players set title = ?, fast_copy = ?, sort_num = ?, country = ? where id = ?", [this.form.title, this.form.fast_copy, this.form.sort_num, this.form.country, this.form.id])
       }
-      this.form = {id: 0, title: '', fast_copy: '', sort_num: 0}
+      this.form = {id: 0, title: '', fast_copy: '', sort_num: 0, country: 0}
       await this.getList()
     },
     async getList(page) {

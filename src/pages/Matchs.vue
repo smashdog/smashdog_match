@@ -210,9 +210,9 @@
 </template>
 
 <script>
-import { BaseDirectory, writeTextFile } from '@tauri-apps/api/fs'
+import { BaseDirectory, writeTextFile, copyFile } from '@tauri-apps/api/fs'
 import { open } from "@tauri-apps/api/shell"
-import { appDataDir } from "@tauri-apps/api/path"
+import { appDataDir, resolveResource, join } from "@tauri-apps/api/path"
 import { writeText } from '@tauri-apps/api/clipboard'
 export default {
   data() {
@@ -256,9 +256,11 @@ export default {
       group_count: [],
       start_id: 0,
       is_final: 0,
+      country: {},
     }
   },
   async created() {
+    this.country = this.$country
     if(localStorage.getItem('config')){
       let config = JSON.parse(localStorage.getItem('config'))
       if(typeof config.shareApi != 'undefined'){
@@ -377,8 +379,8 @@ export default {
       this.$router.push('/games')
     },
     async getMatch(match) {
-      const player1 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy from players where id = ?", [match.player_one_id])
-      const player2 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy from players where id = ?", [match.player_two_id])
+      const player1 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy, country from players where id = ?", [match.player_one_id])
+      const player2 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy, country from players where id = ?", [match.player_two_id])
       let player_one_title = player1[0] ? player1[0].title : ''
       match.gray1 = false
       match.gray2 = false
@@ -407,6 +409,8 @@ export default {
       match.player_two_sort_num = player2[0] ? player2[0].sort_num : ''
       match.player_one_fast_copy = player1[0] ? player1[0].fast_copy : ''
       match.player_two_fast_copy = player2[0] ? player2[0].fast_copy : ''
+      match.player_one_country = player1[0] ? player1[0].country : '';
+      match.player_two_country = player2[0] ? player2[0].country : '';
       return match
     },
     async fastCopy(text) {
@@ -431,6 +435,20 @@ export default {
       await writeTextFile('obs/p2_title.txt', this[chars][i][j][k].change_user_place == 0 ? player_two_title : player_one_title, { dir: BaseDirectory.App })
       await writeTextFile('obs/p1_score.txt', this[chars][i][j][k].change_user_place == 0 ? this[chars][i][j][k].player_one_score + '' : this[chars][i][j][k].player_two_score + '', { dir: BaseDirectory.App })
       await writeTextFile('obs/p2_score.txt', this[chars][i][j][k].change_user_place == 0 ? this[chars][i][j][k].player_two_score + '' : this[chars][i][j][k].player_one_score + '', { dir: BaseDirectory.App })
+      if(this[chars][i][j][k].player_one_country){
+        const targetRelativePath = await join('obs', 'p1.svg')
+        const resourcePath = this[chars][i][j][k].change_user_place == 0 ? await resolveResource(`../src/assets/country/${this.country[this[chars][i][j][k].player_one_country].二位代码}.svg`) : await resolveResource(`../src/assets/country_jpg/${this.country[this[chars][i][j][k].player_two_country].二位代码}.svg`)
+        await copyFile(resourcePath, targetRelativePath, { 
+          dir: BaseDirectory.App 
+        })
+      }
+      if(this[chars][i][j][k].player_two_country){
+        const targetRelativePath = await join('obs', 'p2.svg')
+        const resourcePath = this[chars][i][j][k].change_user_place == 0 ? await resolveResource(`../src/assets/country/${this.country[this[chars][i][j][k].player_two_country].二位代码}.svg`) : await resolveResource(`../src/assets/country_jpg/${this.country[this[chars][i][j][k].player_one_country].二位代码}.svg`)
+        await copyFile(resourcePath, targetRelativePath, { 
+          dir: BaseDirectory.App 
+        })
+      }
     },
     async startMatch(chars, i, j, k) {
       if (this.start_id != 0 && this.start_id != this[chars][i][j][k].id) {
