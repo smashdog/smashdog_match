@@ -43,10 +43,12 @@
 </template>
 
 <script>
-import { BaseDirectory, writeTextFile } from '@tauri-apps/api/fs'
+import { BaseDirectory, writeTextFile, copyFile } from '@tauri-apps/api/fs'
+import { join, resolveResource } from '@tauri-apps/api/path'
 import { writeText } from '@tauri-apps/api/clipboard'
 export default {
   async created() {
+    this.country = this.$country
     const game = await this.$getGame(this.$route.params.id)
     if (typeof game == 'string') {
       layer.msg(game, () => {
@@ -71,6 +73,7 @@ export default {
         score: 0,
         fast_copy: '',
       },
+      country: {},
     }
   },
   methods: {
@@ -97,6 +100,13 @@ export default {
     async start(user, p) {
       await writeTextFile(`obs/p${p}_title.txt`, user.title, { dir: BaseDirectory.App })
       await writeTextFile(`obs/p${p}_score.txt`, '0', { dir: BaseDirectory.App })
+      if(user.country){
+        const targetRelativePath = await join('obs', `p${p}.svg`)
+        const resourcePath = await resolveResource(`../src/assets/country/${this.country[user.country].二位代码}.svg`)
+        await copyFile(resourcePath, targetRelativePath, { 
+          dir: BaseDirectory.App 
+        })
+      }
       this[`p${p}`].title = user.title
       this[`p${p}`].score = 0
       this[`p${p}`].fast_copy = user.fast_copy
