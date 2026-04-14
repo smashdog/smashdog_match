@@ -80,8 +80,8 @@
         </thead>
         <tbody>
           <tr v-for="(player, index) in list.data">
-            <td>{{ player.title }}</td>
             <td><img v-if="player.cover" :src="player.cover" alt="" height="80"></td>
+            <td>{{ player.title }}</td>
             <td>
               <span v-if="player.country">
                 {{ country[player.country].二位代码 }} {{ country[player.country].中文名称 }}
