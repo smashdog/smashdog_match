@@ -14,5 +14,11 @@
       "prepare": "select * from sqlite_master where type = 'table' and name = 'players' and sql like '%country%'",
       "update": "alter table players add column 'country' TEXT default ''"
     }
+  ],
+  "0.6.0": [
+    {
+      "prepare": "select * from sqlite_master where type = 'table' and name = 'players' and sql like '%cover%'",
+      "update": "alter table players add column 'cover' TEXT default ''"
+    }
   ]
 }

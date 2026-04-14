@@ -210,7 +210,7 @@
 </template>
 
 <script>
-import { BaseDirectory, writeTextFile, copyFile } from '@tauri-apps/api/fs'
+import { BaseDirectory, writeTextFile, copyFile, exists } from '@tauri-apps/api/fs'
 import { open } from "@tauri-apps/api/shell"
 import { appDataDir, resolveResource, join } from "@tauri-apps/api/path"
 import { writeText } from '@tauri-apps/api/clipboard'
@@ -379,8 +379,8 @@ export default {
       this.$router.push('/games')
     },
     async getMatch(match) {
-      const player1 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy, country from players where id = ?", [match.player_one_id])
-      const player2 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy, country from players where id = ?", [match.player_two_id])
+      const player1 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy, country, cover from players where id = ?", [match.player_one_id])
+      const player2 = await this.$db.select("select title, (sort_num + 1) as sort_num, fast_copy, country, cover from players where id = ?", [match.player_two_id])
       let player_one_title = player1[0] ? player1[0].title : ''
       match.gray1 = false
       match.gray2 = false
@@ -411,6 +411,8 @@ export default {
       match.player_two_fast_copy = player2[0] ? player2[0].fast_copy : ''
       match.player_one_country = player1[0] ? player1[0].country : '';
       match.player_two_country = player2[0] ? player2[0].country : '';
+      match.player_one_cover = player1[0] ? player1[0].cover : '';
+      match.player_two_cover = player2[0] ? player2[0].cover : '';
       return match
     },
     async fastCopy(text) {
@@ -448,6 +450,16 @@ export default {
         await copyFile(resourcePath, targetRelativePath, { 
           dir: BaseDirectory.App 
         })
+      }
+      if(this[chars][i][j][k].player_one_cover){
+        await writeTextFile(`obs/p${this[chars][i][j][k].change_user_place == 0 ? 1 : 2}coversrc.html`, `players/${this[chars][i][j][k].player_one_cover}`, { dir: BaseDirectory.App })
+      }else{
+        await writeTextFile(`obs/p${this[chars][i][j][k].change_user_place == 0 ? 1 : 2}coversrc.html`, `coverdefault.svg`, { dir: BaseDirectory.App })
+      }
+      if(this[chars][i][j][k].player_two_cover){
+        await writeTextFile(`obs/p${this[chars][i][j][k].change_user_place == 0 ? 2 : 1}coversrc.html`, `players/${this[chars][i][j][k].player_two_cover}`, { dir: BaseDirectory.App })
+      }else{
+        await writeTextFile(`obs/p${this[chars][i][j][k].change_user_place == 0 ? 2 : 1}coversrc.html`, `coverdefault.svg`, { dir: BaseDirectory.App })
       }
     },
     async startMatch(chars, i, j, k) {
@@ -722,28 +734,30 @@ export default {
         this.start_id = 0
       }
       if(this.form.change_user_place != source.change_user_place && this.form.match_status == 1){
-        if(this.form.parent_id_1 != 0 && this.form.parent_id_2 != 0){
-          const parent_match1 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_1])
-          const parent_match2 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_2])
-          if(parent_match1[0].match_type != parent_match2[0].match_type){
-            player_one_title = `${this.form.player_one_title}(${parent_match1[0].match_type == 1 ? 'W' : 'L'})`
-            player_two_title = `${this.form.player_two_title}(${parent_match2[0].match_type == 1 ? 'W' : 'L'})`
-          }
-        }
-        if(this.form.change_user_place == 0){
-          await writeTextFile('obs/p1_title.txt', player_one_title, { dir: BaseDirectory.App })
-          await writeTextFile('obs/p2_title.txt', player_two_title, { dir: BaseDirectory.App })
-        }else{
-          await writeTextFile('obs/p2_title.txt', player_one_title, { dir: BaseDirectory.App })
-          await writeTextFile('obs/p1_title.txt', player_two_title, { dir: BaseDirectory.App })
-        }
-      }
-      if(this.form.change_user_place == 0){
-        await writeTextFile('obs/p1_score.txt', this.form.player_one_score + '', { dir: BaseDirectory.App })
-        await writeTextFile('obs/p2_score.txt', this.form.player_two_score + '', { dir: BaseDirectory.App })
-      }else{
-        await writeTextFile('obs/p2_score.txt', this.form.player_one_score + '', { dir: BaseDirectory.App })
-        await writeTextFile('obs/p1_score.txt', this.form.player_two_score + '', { dir: BaseDirectory.App })
+        this.writeFile(this.editParams.chars, this.editParams.i, this.editParams.j, this.editParams.k)
+      //   let player_one_title, player_two_title
+      //   if(this.form.parent_id_1 != 0 && this.form.parent_id_2 != 0){
+      //     const parent_match1 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_1])
+      //     const parent_match2 = await this.$db.select("select match_type from matchs where id = ?", [this.form.parent_id_2])
+      //     if(parent_match1[0].match_type != parent_match2[0].match_type){
+      //       player_one_title = `${this.form.player_one_title}(${parent_match1[0].match_type == 1 ? 'W' : 'L'})`
+      //       player_two_title = `${this.form.player_two_title}(${parent_match2[0].match_type == 1 ? 'W' : 'L'})`
+      //     }
+      //   }
+      //   if(this.form.change_user_place == 0){
+      //     await writeTextFile('obs/p1_title.txt', player_one_title, { dir: BaseDirectory.App })
+      //     await writeTextFile('obs/p2_title.txt', player_two_title, { dir: BaseDirectory.App })
+      //   }else{
+      //     await writeTextFile('obs/p2_title.txt', player_one_title, { dir: BaseDirectory.App })
+      //     await writeTextFile('obs/p1_title.txt', player_two_title, { dir: BaseDirectory.App })
+      //   }
+      // }
+      // if(this.form.change_user_place == 0){
+      //   await writeTextFile('obs/p1_score.txt', this.form.player_one_score + '', { dir: BaseDirectory.App })
+      //   await writeTextFile('obs/p2_score.txt', this.form.player_two_score + '', { dir: BaseDirectory.App })
+      // }else{
+      //   await writeTextFile('obs/p2_score.txt', this.form.player_one_score + '', { dir: BaseDirectory.App })
+      //   await writeTextFile('obs/p1_score.txt', this.form.player_two_score + '', { dir: BaseDirectory.App })
       }
       this.form = {
         player_one_title: '',

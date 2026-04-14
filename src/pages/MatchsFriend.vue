@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { BaseDirectory, writeTextFile, copyFile } from '@tauri-apps/api/fs'
+import { BaseDirectory, writeTextFile, copyFile, exists } from '@tauri-apps/api/fs'
 import { join, resolveResource } from '@tauri-apps/api/path'
 import { writeText } from '@tauri-apps/api/clipboard'
 export default {
@@ -107,6 +107,7 @@ export default {
           dir: BaseDirectory.App 
         })
       }
+      await writeTextFile(`obs/p${p}coversrc.html`, `${user.cover ? 'players/' + user.cover : 'coverdefault.svg'}`, { dir: BaseDirectory.App })
       this[`p${p}`].title = user.title
       this[`p${p}`].score = 0
       this[`p${p}`].fast_copy = user.fast_copy

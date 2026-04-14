@@ -12,7 +12,8 @@ import Database from "tauri-plugin-sql-api"
 import { type } from "@tauri-apps/api/os"
 import Vue3Dragscroll from 'vue3-dragscroll'
 import tooltip from "./components/tooltip/directive"
-import { BaseDirectory, writeTextFile, exists, createDir, writeBinaryFile } from '@tauri-apps/api/fs'
+import { BaseDirectory, writeTextFile, exists, createDir, writeBinaryFile, copyFile } from '@tauri-apps/api/fs'
+import { resolveResource } from '@tauri-apps/api/path'
 import { fetch as tfetch, Body, getClient } from "@tauri-apps/api/http"
 
 const app = createApp(App)
@@ -135,7 +136,58 @@ if (!p2chountry) {
     </script>
   `, { dir: BaseDirectory.App })
 }
-if (import.meta.env.VITE_DEBUG) {
+const coverdefault = await exists('obs/coverdefault.svg', { dir: BaseDirectory.App })
+if (!coverdefault) {
+  const resourcePath = await resolveResource(`../src/assets/country/cover.svg`)
+  console.log(resolveResource)
+  await copyFile(resourcePath, 'obs/coverdefault.svg', {
+    dir: BaseDirectory.App
+  })
+}
+let p1cover = await exists('obs/p1cover.html', { dir: BaseDirectory.App })
+if (!p1cover) {
+  await writeTextFile('obs/p1cover.html', `
+    <img src="" id="liveImage" class="flag-icon" width="100%" />
+<script>
+    const img = document.getElementById('liveImage')
+    let src = ''
+
+    function updateImage() {
+        // 通过添加随机时间戳后缀，强制浏览器跳过缓存重新读取文件
+        fetch('p1coversrc.html').then(res => res.text()).then(res => {
+            if(src != res){
+                src = res
+                document.getElementById('liveImage').src = res + '?t=' + new Date().getTime()
+            }
+        })
+    }
+
+    // 每 500 毫秒检查一次（或者根据你生成的频率调整）
+    setInterval(updateImage, 500);
+</script>`, { dir: BaseDirectory.App })
+}
+let p2cover = await exists('obs/p2cover.html', { dir: BaseDirectory.App })
+if (!p2cover) {
+  await writeTextFile('obs/p2cover.html', `
+    <img src="" id="liveImage" class="flag-icon" width="100%" />
+<script>
+    const img = document.getElementById('liveImage')
+    let src = ''
+
+    function updateImage() {
+        // 通过添加随机时间戳后缀，强制浏览器跳过缓存重新读取文件
+        fetch('p2coversrc.html').then(res => res.text()).then(res => {
+            if(src != res){
+                src = res
+                document.getElementById('liveImage').src = res + '?t=' + new Date().getTime()
+            }
+        })
+    }
+
+    // 每 500 毫秒检查一次（或者根据你生成的频率调整）
+    setInterval(updateImage, 500);
+</script>`, { dir: BaseDirectory.App })
+} if (import.meta.env.VITE_DEBUG) {
   app.config.globalProperties.$debug = true
 } else {
   app.config.globalProperties.$debug = false

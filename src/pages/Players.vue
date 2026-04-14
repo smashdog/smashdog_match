@@ -2,10 +2,13 @@
   <h3>{{ game.title }}</h3>
   <div class="top">
     <div class="btn-group" role="group">
-      <button type="button" class="btn btn-sm btn-primary" @click="sync()" v-if="config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && game.game_format != 3">同步报名数据</button>
-      <button type="button" class="btn btn-sm btn-success" @click="showAdd = true" v-if="(game.game_status == 0 && game.game_format != 3 && this.list.count < (game.group_nums * game.group_count)) || game.game_format == 3">添加选手</button>
+      <button type="button" class="btn btn-sm btn-primary" @click="sync()"
+        v-if="config.shareApi.url.length > 0 && config.shareApi.key.length > 0 && game.game_format != 3">同步报名数据</button>
+      <button type="button" class="btn btn-sm btn-success" @click="showAdd = true"
+        v-if="(game.game_status == 0 && game.game_format != 3 && this.list.count < (game.group_nums * game.group_count)) || game.game_format == 3">添加选手</button>
       <button type="button" class="btn btn-sm btn-success" @click="showBatchAdd = true">批量添加选手</button>
-      <button type="button" class="btn btn-sm btn-primary" @click="randPlayers()" v-if="game.game_status == 0 && game.game_format != 3">打乱选手</button>
+      <button type="button" class="btn btn-sm btn-primary" @click="randPlayers()"
+        v-if="game.game_status == 0 && game.game_format != 3">打乱选手</button>
       <button type="button" class="btn btn-sm btn-secondary" @click="$router.push('/games')">返回比赛列表</button>
     </div>
   </div>
@@ -13,32 +16,43 @@
     <form class="div_form">
       <div class="mb-3">
         <label for="player_title" class="form-label">选手名称</label>
-        <input type="text" class="form-control" id="player_title" name="player_title" placeholder="请输入选手名称" v-model="form.title" autocomplete="off">
+        <input type="text" class="form-control" id="player_title" name="player_title" placeholder="请输入选手名称"
+          v-model="form.title" autocomplete="off">
+      </div>
+      <div class="mb-3">
+        <label for="player_cover" class="form-label">选手名称</label>
+        <button type="button" class="btn btn-sm btn-success" @click="handleSelectAndSaveImage()">选手头像</button>
+        <br>
+        <img v-if="form.displayUrl" :src="form.displayUrl" alt="" class="cover">
       </div>
       <div class="mb-3">
         <label for="player_country" class="form-label">国家/地区</label>
         <select name="player_country" id="player_country" class="form-select" v-model="form.country">
-          <option v-for="(value, index) in country" :value="index" :selected="form.id && form.country == index">{{value.二位代码}} {{value.中文名称}}</option>
+          <option v-for="(value, index) in country" :value="index" :selected="form.id && form.country == index">
+            {{ value.二位代码 }} {{ value.中文名称 }}</option>
         </select>
       </div>
       <div class="mb-3">
         <label for="fast_copy" class="form-label">快速复制内容（例如街霸6用户码）</label>
-        <input type="text" class="form-control" id="fast_copy" name="fast_copy" placeholder="请输入快速复制内容" v-model="form.fast_copy" autocomplete="off">
+        <input type="text" class="form-control" id="fast_copy" name="fast_copy" placeholder="请输入快速复制内容"
+          v-model="form.fast_copy" autocomplete="off">
       </div>
       <div class="mb-3">
         <label for="sort_num" class="form-label">排序</label>
-        <input type="number" step="1" min="0" class="form-control" id="sort_num" name="sort_num" placeholder="数字越大排序越靠后" v-model="form.sort_num" autocomplete="off">
+        <input type="number" step="1" min="0" class="form-control" id="sort_num" name="sort_num" placeholder="数字越大排序越靠后"
+          v-model="form.sort_num" autocomplete="off">
       </div>
       <div class="mb-3">
         <button type="button" class="btn btn-sm btn-success" @click="submit()">提交</button>
-        <button type="button" class="btn btn-sm btn-secondary" @click="showAdd = false">取消</button>
+        <button type="button" class="btn btn-sm btn-secondary" @click="showAdd = false; coverExt = ''">取消</button>
       </div>
     </form>
   </div>
   <div class="add_player window" v-show="showBatchAdd">
     <form class="div_form">
       <div class="mb-3">
-        <textarea style="min-width: 60vw;" id="batchAddTextarea" rows="10" class="form-form-control" v-model="batchAddInfo" placeholder="一行一个选手，内容为：选手名称,快速复制内容,排序例如：
+        <textarea style="min-width: 60vw;" id="batchAddTextarea" rows="10" class="form-form-control"
+          v-model="batchAddInfo" placeholder="一行一个选手，内容为：选手名称,快速复制内容,排序例如：
 张三,123456,0
 李四,654321,1
 王五,789321,2
@@ -57,6 +71,7 @@
     <div>
       <table class="table table-hover">
         <thead>
+          <th>头像</th>
           <th>选手名称</th>
           <th>国家/地区</th>
           <th>快速复制内容</th>
@@ -66,9 +81,10 @@
         <tbody>
           <tr v-for="(player, index) in list.data">
             <td>{{ player.title }}</td>
+            <td><img v-if="player.cover" :src="player.cover" alt="" height="80"></td>
             <td>
               <span v-if="player.country">
-                {{country[player.country].二位代码}} {{country[player.country].中文名称}}
+                {{ country[player.country].二位代码 }} {{ country[player.country].中文名称 }}
                 <img :src="getFlagSrc(country[player.country].二位代码)" class="flag-icon" width="32" />
               </span>
             </td>
@@ -76,7 +92,8 @@
             <td>{{ player.sort_num }}</td>
             <td>
               <button type="button" class="btn btn-sm btn-success" @click="editPlayer(player.id)">编辑</button>
-              <button type="button" class="btn btn-sm btn-danger" @click="deletePlayer(player.id)" v-if="game.game_status == 0 || (game.game_status == 4 && game.game_format == 3)">删除</button>
+              <button type="button" class="btn btn-sm btn-danger" @click="deletePlayer(player.id)"
+                v-if="game.game_status == 0 || (game.game_status == 4 && game.game_format == 3)">删除</button>
             </td>
           </tr>
         </tbody>
@@ -89,8 +106,12 @@
 <script>
 import mypage from "../components/page.vue";
 import { writeText } from '@tauri-apps/api/clipboard'
+import { open } from '@tauri-apps/api/dialog'
+import { BaseDirectory, createDir, copyFile, renameFile, exists, removeFile } from '@tauri-apps/api/fs'
+import { extname, join, appDataDir } from '@tauri-apps/api/path'
+import { convertFileSrc } from '@tauri-apps/api/tauri'
 export default {
-  components: {mypage},
+  components: { mypage },
   data() {
     return {
       config: {
@@ -99,7 +120,7 @@ export default {
           key: '',
         }
       },
-      list:{
+      list: {
         data: [],
         page: 1,
         maxPage: 1,
@@ -124,27 +145,30 @@ export default {
         fast_copy: '',
         sort_num: 0,
         country: 0,
+        cover: '',
+        displayUrl: '',
       },
-      country: {}
+      country: {},
+      coverExt: '',
     }
   },
   async mounted() {
     this.country = this.$country
     let config = {}
-    if(!localStorage.getItem('config')){
+    if (!localStorage.getItem('config')) {
       config = {
         shareApi: {
           url: '',
           key: ''
         }
       }
-    }else{
+    } else {
       config = JSON.parse(localStorage.getItem('config'))
     }
     this.config = config
     this.game_id = this.$route.params.id
     const game = await this.$getGame(this.game_id)
-    if(typeof game == 'string'){
+    if (typeof game == 'string') {
       layer.msg(game, () => {
         this.$router.push('/games')
       })
@@ -153,21 +177,47 @@ export default {
     this.getList()
   },
   methods: {
-    async sync(){
+    async handleSelectAndSaveImage() {
+      try {
+        const selectedPath = await open({
+          multiple: false,
+          filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+        })
+        if (!selectedPath) return
+        const extension = this.coverExt = await extname(selectedPath)
+        const fileName = `obs/players/tmp.${extension}`
+        await createDir("obs/players", { dir: BaseDirectory.App, recursive: true })
+        await copyFile(selectedPath, fileName, { dir: BaseDirectory.App })
+        const dataDirPath = await appDataDir(); // 获取替代 appDir() 的新路径
+        const finalPath = await join(dataDirPath, fileName)
+        this.form.displayUrl = convertFileSrc(finalPath)
+        this.form.cover = fileName
+        console.log("图片已存入 AppData 目录:", finalPath)
+
+      } catch (err) {
+        console.error("处理图片失败:", err);
+      }
+    },
+    async getCover(cover){
+      const baseDir = await appDataDir()
+      const fullPath = await join(baseDir, "obs/players/" + cover)
+      return convertFileSrc(fullPath)
+    },
+    async sync() {
       const res = await this.$tfetch(this.config.shareApi.url.replace('index.php', 'sign.php'), {
         key: this.config.shareApi.key,
         id: this.game.id,
         action: 'sync'
       })
-      if(res.code != 0){
+      if (res.code != 0) {
         layer.msg(res.msg)
         return
       }
       let updates = [], inserts = [], temp1 = this.list.data
-      for(let k in res.data){
+      for (let k in res.data) {
         let update = false
-        for(let k1 in temp1){
-          if(temp1[k1].title == res.data[k].nickname){
+        for (let k1 in temp1) {
+          if (temp1[k1].title == res.data[k].nickname) {
             update = true
             updates.push({
               id: temp1[k1].id,
@@ -178,7 +228,7 @@ export default {
             break
           }
         }
-        if(!update){
+        if (!update) {
           inserts.push({
             title: res.data[k].nickname,
             fast_copy: res.data[k].fastcopy
@@ -186,30 +236,30 @@ export default {
         }
       }
       let dels = []
-      for(let k in temp1){
+      for (let k in temp1) {
         dels.push(temp1[k].id)
       }
-      if(dels.length > 0){
+      if (dels.length > 0) {
         await this.$db.execute("delete from players where id in (" + dels.join(',') + ")")
       }
-      if(updates.length > 0){
+      if (updates.length > 0) {
         let sql = ''
-        for(let k in updates){
+        for (let k in updates) {
           sql += `update players set title = '${updates[k]['title']}', fast_copy = '${updates[k]['fast_copy']}' where id = ${updates[k]['id']};`
         }
         await this.$db.execute(sql)
       }
-      if(inserts.length > 0){
+      if (inserts.length > 0) {
         let sql = 'insert into players (title, fast_copy, game_id, sort_num) values ', i = 0
-        for(let k in inserts){
+        for (let k in inserts) {
           sql += (i == 0 ? '' : ',') + `('${inserts[k]['title']}', '${inserts[k]['fast_copy']}', ${this.game.id}, 0)`
-          i ++
+          i++
         }
         await this.$db.execute(sql)
       }
       this.getList()
     },
-    getFlagSrc(code){
+    getFlagSrc(code) {
       return this.$getFlagSrc(code)
     },
     async fastCopy(text) {
@@ -219,7 +269,7 @@ export default {
       await writeText(text)
       layer.msg('复制成功')
     },
-    async randPlayers(){
+    async randPlayers() {
       layer.load()
       let players = await this.$db.select("select * from players where game_id = ? and is_display = 1", [this.game.id])
       players.sort(() => {
@@ -231,7 +281,7 @@ export default {
       this.getList()
       layer.closeAll()
     },
-    changePageSize(pageSize){
+    changePageSize(pageSize) {
       this.list.pageSize = pageSize
       this.getList()
     },
@@ -241,17 +291,17 @@ export default {
         layer.msg('请输入选手名称')
         return
       }
-      if(this.game.game_status == 1 && this.game.game_format != 3){
+      if (this.game.game_status == 1 && this.game.game_format != 3) {
         layer.msg('比赛已经开始不能添加选手')
         return
       }
-      if(this.game.game_format != 2 && this.game_status == 2){
+      if (this.game.game_format != 2 && this.game_status == 2) {
         layer.msg('比赛类型为双败或单败时，比赛结束后不能添加选手')
         return
       }
       const nums = await this.$db.select("select count(*) as mycount from players where game_id = ?", [this.game_id])
       const maxUserNum = this.game.group_nums * 26
-      if(nums[0].mycount >= maxUserNum){
+      if (nums[0].mycount >= maxUserNum) {
         layer.msg(`参赛选手人数不能大于${maxUserNum}人（小组人数*26个队伍）`)
         return
       }
@@ -269,20 +319,40 @@ export default {
           layer.msg('该选手已存在')
           return
         }
-        console.log(this.form)
         await this.$db.execute("update players set title = ?, fast_copy = ?, sort_num = ?, country = ? where id = ?", [this.form.title, this.form.fast_copy, this.form.sort_num, this.form.country, this.form.id])
       }
-      this.form = {id: 0, title: '', fast_copy: '', sort_num: 0, country: 0}
+      if(this.coverExt){
+        let id
+        if(this.form.id){
+          id = this.form.id
+        }else{
+          id = await this.$db.execute("SELECT last_insert_rowid()")
+        }
+        const fileExists = await exists(`obs/players/${id}.${this.coverExt}`, { dir: BaseDirectory.App })
+        if(fileExists){
+          await removeFile(`obs/players/${id}.${this.coverExt}`, { dir: BaseDirectory.App })
+        }
+        await renameFile(`obs/players/tmp.${this.coverExt}`, `obs/players/${id}.${this.coverExt}`, { dir: BaseDirectory.App })
+        await this.$db.execute("update players set cover = ? where id = ?", [`${id}.${this.coverExt}`, id])
+      }
+      this.form = { id: 0, title: '', fast_copy: '', sort_num: 0, country: 0 }
+      this.coverExt = ''
       await this.getList()
     },
     async getList(page) {
-      if(!page){
+      if (!page) {
         page = 1
-      }else if(page == this.list.page){
+      } else if (page == this.list.page) {
         return
       }
       this.list.page = page
-      this.list = await this.$page('players', this.list.page, localStorage.getItem('pageSize'), ' game_id = ' + this.game_id + ' and is_display = 1', '*', 'sort_num asc, id asc')
+      let temp = await this.$page('players', this.list.page, localStorage.getItem('pageSize'), ' game_id = ' + this.game_id + ' and is_display = 1', '*', 'sort_num asc, id asc')
+      for(let i = 0; i < temp.data.length; i ++){
+        if(temp.data[i].cover){
+          temp.data[i].cover = await this.getCover(temp.data[i].cover)
+        }
+      }
+      this.list = temp
     },
     async editPlayer(id) {
       const sqlreturn = await this.$db.select("select * from players where id = ?", [id])
@@ -292,6 +362,9 @@ export default {
       }
       this.showAdd = true
       this.form = sqlreturn[0]
+      if(sqlreturn[0].cover){
+        this.form.displayUrl = await this.getCover(sqlreturn[0].cover)
+      }
     },
     async deletePlayer(id) {
       layer.confirm('确定删除该选手吗？', async () => {
@@ -312,7 +385,7 @@ export default {
     },
     async batchSubmit() {
       this.showBatchAdd = false
-      if(this.batchAddInfo.trim().length == 0){
+      if (this.batchAddInfo.trim().length == 0) {
         layer.msg('选手内容为空')
       }
       const load = layer.load()
@@ -320,21 +393,21 @@ export default {
       let has = ''
       let err = ''
       let nums = 0
-      for(let i = 0; i < data.length; i ++){
+      for (let i = 0; i < data.length; i++) {
         let temp = data[i].split(',')
         const title = temp[0].trim()
         const fast_copy = temp[1] ?? ''
         let sort = temp[2] ?? 0
         try {
-          
-          if(/^\d+$/.test(sort)){
+
+          if (/^\d+$/.test(sort)) {
             sort = Number(sort)
           }
         } catch (error) {
           console.log(temp, sort)
           return
         }
-        if(temp[0].length == 0){
+        if (temp[0].length == 0) {
           err += (err.length == 0 ? '' : ',') + (i + 1)
           continue
         }
@@ -344,12 +417,19 @@ export default {
           continue
         }
         await this.$db.execute("insert into players (title, game_id,fast_copy,sort_num) values (?, ?, ?, ?)", [title, this.game_id, fast_copy, sort])
-        nums ++
+        nums++
       }
       layer.close(load)
       let msg = '批量添加完成' + (err.length > 0 ? `<br>其中第${err}行姓名为空因此没有添加` : '') + (has.length > 0 ? `<br>其中“${has}”选手已经存在因此没有添加` : '')
       layer.alert(msg)
+      await this.getList()
     }
   }
 }
 </script>
+<style scoped>
+.cover{
+  max-width: 200px;
+  max-height: 200px;
+}
+</style>
