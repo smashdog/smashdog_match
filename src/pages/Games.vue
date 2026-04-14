@@ -6,6 +6,7 @@
       <button type="button" class="btn btn-primary btn-sm" @click="openApiConfig()">配置对阵分享api</button>
       <!-- 调式 -->
       <button type="button" class="btn btn-danger btn-sm" @click="clearData()" v-if="$debug">清除数据</button>
+      <a href="javascript:void(0)" v-on:click="handleOpenLink()">获取帮助？</a>
     </div>
   </div>
   <div class="add_game window" v-show="showAdd">
@@ -217,6 +218,14 @@ export default {
     }
   },
   methods: {
+    async handleOpenLink(){
+      try {
+        // 替换为你想要跳转的链接
+        await open('https://www.bilibili.com/opus/922787347218563096');
+      } catch (err) {
+        console.error("无法打开链接:", err);
+      }
+    },
     stopGames(id){
       layer.confirm('结束比赛将不能再更改比赛信息，确定结束比赛吗？', async index => {
         try {
@@ -741,3 +750,13 @@ export default {
   }
 }
 </script>
+<style scoped>
+.top>.btn-group{
+  display: table-cell;
+  vertical-align: middle;
+}
+a{
+  color: red;
+  margin-left: 10px;
+}
+</style>

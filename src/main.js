@@ -187,7 +187,8 @@ if (!p2cover) {
     // 每 500 毫秒检查一次（或者根据你生成的频率调整）
     setInterval(updateImage, 500);
 </script>`, { dir: BaseDirectory.App })
-} if (import.meta.env.VITE_DEBUG) {
+}
+if (import.meta.env.VITE_DEBUG) {
   app.config.globalProperties.$debug = true
 } else {
   app.config.globalProperties.$debug = false
